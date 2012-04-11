@@ -1,49 +1,19 @@
 // Store models in *PouchDB*.
+Backbone.sync = function(method, model, options) {
+  function fn(err, resp) {
+    err === null ? options.success(resp) : options.error(err);
+  }
 
-(function() {
-  // all those could be higher order functions, right?
-  function get(database, model, options) {
-    console.log('get');
-    pouch.open(database, function(err, db) {
-      db.get(model.id, function(err, doc) {
-        err === null ? options.success(doc) : options.error(err);
-      });
-    });
-  }
-  
-  function allDocs(database, options) {
-    pouch.open(database, function(err, db) {
-      db.allDocs({ include_docs: true }, function(err, doc) {
-        err === null ? options.success(doc) : options.error(err);
-      });
-    });
-  }
-  
-  function write(database, model, options) {
-    pouch.open(database, function(err, db) {
-      db.put(model.toJSON(), function(err, resp) {
-        err === null ? options.success(resp) : options.error(err);
-      });
-    });
-  }
-  
-  function destroy(database, model, options) {
-    pouch.open(database, function(err, db) {
-      db.remove(model.toJSON(), function(err, resp) {
-        err === null ? options.success(resp) : options.error(err);
-      });
-    });
-  }
-  
-  Backbone.sync = function(method, model, options) {
-
-    var database = model.database || model.collection.database;
-
-    switch (method) {
-      case "read":   model.id ? get(database, model, options) : allDocs(database, options); break;
-      case "create": write(database, model, options);                                       break;
-      case "update": write(database, model, options);                                       break;
-      case "delete": destroy(database, model, options);                                     break;
+  pouch.open(model.database || model.collection.database, function(err, db) {
+    if (err === null) {
+      switch (method) {
+        case "read":   model.id ? db.get(model.id, fn) : db.allDocs({ include_docs: true }, fn); break;
+        case "create": db.put(model.toJSON(), fn);                                               break;
+        case "update": db.post(model.toJSON(), fn);                                              break;
+        case "delete": db.remove(model.toJSON(), fn);                                            break;
+      }
+    } else {
+      options.error(err);
     }
-  };
-})();
+  });
+};
