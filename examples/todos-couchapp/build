@@ -1,0 +1,95 @@
+#!/usr/bin/env ruby
+# Mouch - couch app purism
+# (c) 2011 Johannes J. Schmidt, TF
+#
+# Mouch build command generates a Mouch App from an app file,
+# specified via APP parameter.
+# 
+# Usage:
+#   ./build FILENAME
+#   echo '{ "read_me": <%=h read "README" %> }' | ./build
+# List Dependencies:
+#   ./build app.json.erb --deps
+#   echo '{ <%=h read ["**/*.css", "**/*.js", "**/*.html"] %> }' | ./build --deps
+#
+require 'erb'
+
+PRINT_DEPS = ARGV.delete('--deps')
+
+
+# escape content
+def h content
+  content.inspect.gsub('</script>', '<\/script>')
+end
+
+# encode base64
+def base64 content
+  [content].pack("m").gsub(/\s+/,'')
+end
+
+# read files
+# files can be one filename, a pattern
+# or an array of filenames and/or patterns
+def read patterns
+  Dir[*patterns].uniq.map do |f|
+    filename = File.join(Dir.pwd, f)
+
+    @files ||= []; @files << filename
+    STDERR.puts filename
+
+    case File.extname(filename)
+    when '.erb'
+      Dir.chdir File.dirname(filename) do
+        ERB.new(File.read(File.basename(filename))).result(binding)
+      end
+    else
+      File.read filename
+    end
+  end.join("\n")
+end
+
+
+# map directory structure
+# to javascript objects
+def map dirname, indent = 2
+  out = "{\n"
+  omit_comma = true
+  Dir.entries(dirname).each do |f|
+    next if f =~ /^\./
+    file = File.join(dirname, f)
+    f.sub!(/\.erb$/, '')
+    f.sub!(/#{Regexp.escape File.extname(f)}$/, '')
+
+    if omit_comma
+      omit_comma = false
+    else
+      out << ",\n"
+    end
+    out << ' '*indent + '  "%s": ' % f
+    if File.directory?(file)
+      out << map(file, indent + 2)
+    else
+      out << h(read(file))
+    end
+  end
+  out + "\n" + ' '*indent + '}'
+end
+
+
+
+# run
+if PRINT_DEPS
+  if File.file?(ARGF.filename)
+    read ARGF.filename
+  else
+    ERB.new(ARGF.read).result(binding)
+  end
+  puts @files.uniq if @files
+else
+  if File.file?(ARGF.filename)
+    puts read ARGF.filename
+  else
+    puts ERB.new(ARGF.read).result(binding)
+  end
+end
+

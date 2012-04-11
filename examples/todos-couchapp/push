@@ -1,0 +1,81 @@
+#!/usr/bin/env ruby
+# Mouch - couch app purism
+# (c) 2011 Johannes J. Schmidt, TF
+#
+# This command pushes the application, described via APP file or commandline stream
+# to the database specified via URL parameter.
+# 
+# Usage:
+#   ./push APP URL [URL1,URL2...]
+require 'tempfile'
+require 'json'
+
+BATCH_SIZE = 100
+
+urls = []
+
+# remove all urls from arguments
+while ARGV.length > 1
+  urls << ARGV.pop.sub(/\/$/, '')
+end
+
+# get app from commandline
+APP = JSON.parse ARGF.read
+APP.freeze
+
+def spinner number, total
+  STDERR.print "\r"
+  STDERR.print "%.2f%% (%d/%d)" % [number*100.0/total, number, total]
+end
+
+def push url
+  STDERR.puts '* pushing %s' % url
+
+  app = APP.dup
+
+  cnt = 0
+  total = app['docs'].length
+  # push app in batches
+  app['docs'].each_slice(BATCH_SIZE) do |apps|
+    docs = {}
+    apps.each { |doc| docs[doc['_id']] = doc }
+
+    # get revs
+    file = Tempfile.new('ids.json')
+    current = {}
+    begin
+      file << { "keys" => apps.map { |d| d['_id'] } }.to_json
+      file.rewind
+      current = JSON.parse `curl --insecure -s -XPOST #{url}/_all_docs -H 'Content-Type:application/json' -d@'#{file.path}'`
+    ensure
+      file.close
+    end
+
+    # parse response
+    if current['rows']
+      current['rows'].each do |row|
+        doc = docs[row['id']]
+        doc['_rev'] = row['value']['rev'] if doc
+      end
+    end
+
+    # push app
+    file = Tempfile.new('app.json')
+    begin
+      file << { "docs" => apps }.to_json
+      file.rewind
+      JSON.parse(`curl --insecure -s -XPOST #{url}/_bulk_docs -d@'#{file.path}' -H 'Content-Type: application/json'`)
+    ensure
+      file.close!
+    end
+
+    cnt += docs.length
+    spinner cnt, total
+  end
+
+  STDERR.puts
+end
+
+urls.each do |url|
+  push url
+end
