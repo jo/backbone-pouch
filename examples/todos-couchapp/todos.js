@@ -252,7 +252,7 @@ $(function(){
     replicate: function () {
       var url = this.$('#replicate input[type=url]').val();
 
-      pouch.open(Todos.database, function(err, db) {
+      new Pouch(Todos.pouchdb, function(err, db) {
         db.replicate.from(url, function(err, resp) {
           console.log('docs pulled: ' + resp.docs_written);
         });
