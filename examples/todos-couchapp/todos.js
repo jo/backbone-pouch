@@ -252,13 +252,12 @@ $(function(){
     replicate: function () {
       var url = this.$('#replicate input[type=url]').val();
 
-      new Pouch(Todos.pouchdb, function(err, db) {
-        db.replicate.from(url, function(err, resp) {
-          console.log('docs pulled: ' + resp.docs_written);
-        });
-        db.replicate.to(url, function(err, resp) {
-          console.log('docs pushed: ' + resp.docs_written);
-        });
+      Pouch.replicate(url, Todos.pouchdb, function(err, resp) {
+        console.log('docs pulled: ' + resp.docs_written);
+        Todos.fetch();
+      });
+      Pouch.replicate(Todos.pouchdb, url, function(err, resp) {
+        console.log('docs pushed: ' + resp.docs_written);
       });
 
       return false;
