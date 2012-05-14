@@ -54,7 +54,7 @@ $(function(){
     model: Todo,
 
     // Save all of the todo items in the `"todos-backbone"` database.
-    database: 'todos-backbone',
+    database: 'idb://todos-backbone',
 
     parse: function(response) {
       var type = this.model.prototype.defaults().type;

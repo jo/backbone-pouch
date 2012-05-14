@@ -11,7 +11,7 @@ Check out the Todo example how it works.
 Basically, just set a `database` property on your model or collection:
 
     Backbone.Model.extend({
-      database: 'mydb'
+      database: 'idb://mydb'
     });
 
 
