@@ -4,7 +4,7 @@ Backbone.sync = function(method, model, options) {
     err === null ? options.success(resp) : options.error(err);
   }
 
-  pouch.open(model.database || model.collection.database, function(err, db) {
+  new Pouch(model.database || model.collection.database, function(err, db) {
     if (err === null) {
       switch (method) {
         case "read":   model.id ? db.get(model.id, fn) : db.allDocs({ include_docs: true }, fn); break;
