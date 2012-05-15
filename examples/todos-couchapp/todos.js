@@ -176,8 +176,7 @@ $(function(){
     events: {
       "keypress #new-todo":  "createOnEnter",
       "click #clear-completed": "clearCompleted",
-      "click #toggle-all": "toggleAllComplete",
-      "submit #replicate": "replicate"
+      "click #toggle-all": "toggleAllComplete"
     },
 
     // At initialization we bind to the relevant events on the `Todos`
@@ -247,22 +246,7 @@ $(function(){
     toggleAllComplete: function () {
       var done = this.allCheckbox.checked;
       Todos.each(function (todo) { todo.save({'done': done}); });
-    },
-
-    replicate: function () {
-      var url = this.$('#replicate input[type=url]').val();
-
-      Pouch.replicate(url, Todos.pouchdb, function(err, resp) {
-        console.log('docs pulled: ' + resp.docs_written);
-        Todos.fetch();
-      });
-      Pouch.replicate(Todos.pouchdb, url, function(err, resp) {
-        console.log('docs pushed: ' + resp.docs_written);
-      });
-
-      return false;
     }
-
   });
 
   // Finally, we kick things off by creating the **App**.

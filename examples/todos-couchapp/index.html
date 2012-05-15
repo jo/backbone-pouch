@@ -8,7 +8,7 @@
 </head>
 
 <body>
-  
+
   <div id="todoapp">
     
     <header>
@@ -27,10 +27,25 @@
         <a id="clear-completed">Clear completed</a>
         <div id="todo-count"></div>
       </div>
-      <form id=replicate>
-        <input type=url placeholder="http://localhost:5984/todos-backbone" required>
-        <input type=submit value="Synchronize">
-      </form>
+    </footer>
+    
+  </div>
+
+  <div id="sync-app">
+    
+    <header>
+      <h1>Sync Todos</h1>
+      <input id="new-replication" type=url placeholder="http://localhost:5984/todos-backbone">
+    </header>
+
+    <section id="sync-main">
+      <ul id="replication-list"></ul>
+    </section>
+
+    <footer>
+      <div id=sync-stats>
+        <div id="replication-count"></div>
+      </div>
     </footer>
     
   </div>
@@ -50,6 +65,7 @@
   <script src="vendor.js"></script>
   <script src="lib.js"></script>
   <script src="todos.js"></script>
+  <script src="sync.js"></script>
 
   <!-- Templates -->
 
@@ -67,6 +83,17 @@
       <a id="clear-completed">Clear <%= done %> completed <%= done == 1 ? 'item' : 'items' %></a>
     <% } %>
     <div class="todo-count"><b><%= remaining %></b> <%= remaining == 1 ? 'item' : 'items' %> left</div>
+  </script>
+
+  <script type="text/template" id="replication-item-template">
+    <div class="view">
+      <label><%= url %></label>
+      <a class="destroy"></a>
+    </div>
+  </script>
+
+  <script type="text/template" id="sync-stats-template">
+    <div class="replication-count">Syncing with <b><%= count %></b> <%= count == 1 ? 'database' : 'databases' %></div>
   </script>
 
   </body>
