@@ -43,19 +43,23 @@ def push url
     # get revs
     file = Tempfile.new('ids.json')
     current = {}
-    begin
-      file << { "keys" => apps.map { |d| d['_id'] } }.to_json
-      file.rewind
-      current = JSON.parse `curl --insecure -s -XPOST #{url}/_all_docs -H 'Content-Type:application/json' -d@'#{file.path}'`
-    ensure
-      file.close
-    end
+    keys = apps.map { |d| d['_id'] }.compact
 
-    # parse response
-    if current['rows']
-      current['rows'].each do |row|
-        doc = docs[row['id']]
-        doc['_rev'] = row['value']['rev'] if doc
+    if keys.length > 0
+      begin
+        file << { "keys" => keys }.to_json
+        file.rewind
+        current = JSON.parse `curl --insecure -s -XPOST #{url}/_all_docs -H 'Content-Type:application/json' -d@'#{file.path}'`
+      ensure
+        file.close
+      end
+
+      # parse response
+      if current['rows']
+        current['rows'].each do |row|
+          doc = docs[row['id']]
+          doc['_rev'] = row['value']['rev'] if doc
+        end
       end
     end
 

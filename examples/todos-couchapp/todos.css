@@ -82,6 +82,10 @@ body {
 	color: #777777;
 	text-decoration: line-through;
 }
+#todo-list li.done.conflicts label,
+#todo-list li.conflicts label {
+	color: #A60000;
+}
 
 #todo-list .destroy {
 	position: absolute;
@@ -312,7 +316,22 @@ body {
 	-o-border-radius: 0 0 5px 5px;
 	border-radius: 0 0 5px 5px;
 }
-
+#sync-stats .docs {
+  float: right;
+}
 #replication-count span {
 	font-weight: bold;
+}
+
+#sync-app {
+  display: none;
+}
+#sync-app:target {
+  display: block;
+}
+#sync-app:target + #todoapp {
+  display: none;
+}
+a.switch {
+  float: right;
 }

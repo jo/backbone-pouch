@@ -13,6 +13,7 @@
 #   echo '{ <%=h read ["**/*.css", "**/*.js", "**/*.html"] %> }' | ./build --deps
 #
 require 'erb'
+require 'json'
 
 PRINT_DEPS = ARGV.delete('--deps')
 

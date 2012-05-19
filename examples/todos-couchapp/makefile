@@ -21,6 +21,9 @@ dep:
 create :
 	curl -XPUT $(URL)
 
+data :
+	./build todos.json.erb > todos.json
+	./push todos.json $(URL)
 
 # clean build files
 clean : 

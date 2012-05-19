@@ -7,7 +7,6 @@ Backbone.sync = (function() {
       if (_dbs[url]) {
         callback(_dbs[url].err, _dbs[url].db);
       } else {
-        // TODO: wait and try again
         console.warn('not ready, try again in 10ms... ' + url);
         _.delay(function() {
           get(callback);

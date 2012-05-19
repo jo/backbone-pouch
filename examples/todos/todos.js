@@ -53,8 +53,8 @@ $(function(){
     model: Todo,
 
     // Save all of the todo items in the `"todos-backbone"` database.
-    pouchdb: 'idb://todos-backbone',
-    // TODO: view support
+    // TODO: support views
+    pouch: Backbone.sync.pouch('idb://todos-backbone'),
 
     // Filter down the list of all todo items that are finished.
     done: function() {

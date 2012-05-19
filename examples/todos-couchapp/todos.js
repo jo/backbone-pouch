@@ -40,7 +40,6 @@ $(function(){
     clear: function() {
       this.destroy();
     }
-
   });
 
   // Todo Collection
@@ -54,7 +53,7 @@ $(function(){
     model: Todo,
 
     // Save all of the todo items in the `"todos-backbone"` database.
-    pouchdb: 'idb://todos-backbone',
+    pouch: Backbone.sync.pouch('idb://todos-backbone'),
 
     parse: function(response) {
       var type = this.model.prototype.defaults().type;
@@ -124,6 +123,7 @@ $(function(){
     render: function() {
       this.$el.html(this.template(this.model.toJSON()));
       this.$el.toggleClass('done', this.model.get('done'));
+      this.$el.toggleClass('conflicts', _.size(this.model.get('_conflicts')) > 0);
       this.input = this.$('.edit');
       return this;
     },
@@ -194,12 +194,46 @@ $(function(){
       this.stats = this.$('#stats');
       this.main = $('#main');
 
-      Todos.fetch();
+      Todos.fetch({
+        success: this.listen
+      });
+    },
+
+    listen: function listen() {
+      Todos.pouch(function(err, db) {
+        // get changes since info.update_seq
+        var change = db.changes({
+          onChange: function(change) {
+            var todo = Todos.get(change.id);
+
+            // hackfix for pouchdb
+            delete change.doc._junk;
+            change.doc._rev = change.changes[change.changes.length - 1].rev;
+
+            if (todo) {
+              todo.set(change.doc);
+            } else {
+              todo = _.first(Todos.parse({ rows: [{ doc: change.doc }] }));
+              todo && Todos.add(todo);
+            }
+          },
+          error: function(e) {
+            console.error('Changes feed died');
+            console.log(e);
+          },
+          continuous: true,
+          // TODO:
+          // sice & info.update_seq is currently not supported by pouchdb
+          //  db.info(function(err, info) {
+          //  });
+          // since: info.update_seq
+        });
+      });
     },
 
     // Re-rendering the App just means refreshing the statistics -- the rest
     // of the app doesn't change.
-    render: function() {
+    render: function(e, a) {
       var done = Todos.done().length;
       var remaining = Todos.remaining().length;
 
@@ -233,7 +267,7 @@ $(function(){
       if (e.keyCode != 13) return;
       if (!this.input.val()) return;
 
-      Todos.create({title: this.input.val()});
+      Todos.create({title: this.input.val()}, { wait: true });
       this.input.val('');
     },
 
@@ -252,4 +286,197 @@ $(function(){
   // Finally, we kick things off by creating the **App**.
   var App = new AppView;
 
+
+  // Replication Model
+  // -----------------
+
+  // Our **Replication** model has an `url` attribute.
+  var Replication = Backbone.Model.extend();
+
+  // Replication Collection
+  // ----------------------
+
+  var ReplicationList = Backbone.Collection.extend({
+
+    // Reference to this collection's model.
+    model: Replication,
+
+    // Save replications in the `"replications-backbone"` database.
+    // TODO: support views
+    pouch: Backbone.sync.pouch('idb://replications-backbone'),
+
+    // Replications are sorted by url.
+    comparator: function(replication) {
+      return replication.get('url');
+    }
+
+  });
+
+  // Create global collection of **Replications**.
+  var Replications = new ReplicationList;
+
+
+  // Replication Item View
+  // ---------------------
+
+  // The DOM element for a replication item...
+  var ReplicationView = Backbone.View.extend({
+
+    //... is a list tag.
+    tagName:  "li",
+
+    // Cache the template function for a single item.
+    template: _.template($('#replication-item-template').html()),
+
+    // The DOM events specific to an item.
+    events: {
+      "click a.destroy" : "clear"
+    },
+
+    // The ReplicationView listens for changes to its model, re-rendering. Since there's
+    // a one-to-one correspondence between a **Replication** and a **ReplicationView** in this
+    // app, we set a direct reference on the model for convenience.
+    initialize: function() {
+      this.model.bind('change', this.render, this);
+      this.model.bind('destroy', this.remove, this);
+    },
+
+    // Re-render the titles of the replication item.
+    render: function() {
+      this.$el.html(this.template(this.model.toJSON()));
+      return this;
+    },
+
+    // Remove the item, destroy the model.
+    clear: function() {
+      this.model.destroy();
+    }
+
+  });
+
+  // The Application
+  // ---------------
+
+  // Our overall **ReplicationAppView** is the top-level piece of UI.
+  var ReplicationAppView = Backbone.View.extend({
+
+    // Instead of generating a new element, bind to the existing skeleton of
+    // the App already present in the HTML.
+    el: $("#sync-app"),
+
+    // Our template for the line of statistics at the bottom of the app.
+    statsTemplate: _.template($('#sync-stats-template').html()),
+
+    // Delegated events for creating new items, and clearing completed ones.
+    events: {
+      "keypress #new-replication":  "createOnEnter"
+    },
+
+    // At initialization we bind to the relevant events on the `Replications` and `Replications`
+    // collections, when items are added or changed. Kick things off by
+    // loading any preexisting replications and replications that might be saved in *PouchDB*.
+    initialize: function() {
+      this.pushResps = {};
+      this.pullResps = {};
+
+      this.input = this.$("#new-replication");
+
+      Replications.bind('add', this.addOne, this);
+      Replications.bind('reset', this.addAll, this);
+      Replications.bind('all', this.render, this);
+
+      this.stats = this.$('#sync-stats');
+      this.main = $('#sync-main');
+
+      Replications.fetch();
+    },
+
+    // Re-rendering the App just means refreshing the statistics -- the rest
+    // of the app doesn't change.
+    render: function() {
+      if (Replications.length) {
+        this.main.show();
+        this.renderStats();
+        this.stats.show();
+      } else {
+        this.main.hide();
+        this.stats.hide();
+      }
+    },
+
+    renderStats: function() {
+      this.stats.html(this.statsTemplate(_.reduce([this.pullResps, this.pushResps], function(memo, resps) {
+        memo.read += _.reduce(resps, function(sum, resp) {
+          return sum + resp.docs_read;
+        }, 0);
+        memo.written += _.reduce(resps, function(sum, resp) {
+          return sum + resp.docs_written;
+        }, 0);
+
+        return memo;
+      }, {
+        read: 0,
+        written: 0,
+        count: Replications.length
+      })));
+    },
+
+    // Add a single replication item to the list by creating a view for it, and
+    // appending its element to the `<ul>`.
+    addOne: function(replication) {
+      var view = new ReplicationView({model: replication});
+      this.$("#replication-list").append(view.render().el);
+      this.replicate(replication);
+    },
+
+    // Add all items in the **Replications** collection at once.
+    addAll: function() {
+      Replications.each(this.addOne, this);
+    },
+
+    // If you hit return in the main input field, create new **Replication** model,
+    // persisting it to *PouchDB*.
+    createOnEnter: function(e) {
+      if (e.keyCode != 13) return;
+      if (!this.input.val()) return;
+
+      Replications.create({url: this.input.val()});
+      this.input.val('');
+    },
+
+    replicate: function (model) {
+      var url = model.get('url'),
+          pushResps = this.pushResps,
+          pullResps = this.pullResps,
+          renderStats = _.bind(this.renderStats, this);
+
+      Todos.pouch(function(err, db) {
+        db.replicate.to(url, { continuous: true }, function(err, resp) {
+          pushResps[url] = resp;
+        });
+        db.replicate.from(url, { continuous: true }, function(err, resp) {
+          pullResps[url] = resp;
+
+        });
+        // get todo changes 
+        var change = db.changes({
+          onChange: renderStats,
+          continuous: true
+        });
+      });
+
+      // get target changes 
+      new Pouch(url, function(err, db) {
+        if (err !== null) return;
+        var change = db.changes({
+          onChange: renderStats,
+          continuous: true
+        });
+      });
+    }
+
+  });
+
+  // Finally, we kick things off by creating the **App**.
+  var ReplicationApp = new ReplicationAppView;
 });

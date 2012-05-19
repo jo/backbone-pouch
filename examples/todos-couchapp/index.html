@@ -9,9 +9,30 @@
 
 <body>
 
+  <div id="sync-app">
+    
+    <header>
+      <a class=switch href=#>Back</a>
+      <h1>Sync Todos</h1>
+      <input id="new-replication" type=url placeholder="http://localhost:5984/todos-backbone">
+    </header>
+
+    <section id="sync-main">
+      <ul id="replication-list"></ul>
+    </section>
+
+    <footer>
+      <div id=sync-stats>
+        <div id="replication-count"></div>
+      </div>
+    </footer>
+    
+  </div>
+  
   <div id="todoapp">
     
     <header>
+      <a class=switch href=#sync-app>Sync</a>
       <h1>Todos</h1>
       <input id="new-todo" type="text" placeholder="What needs to be done?">
     </header>
@@ -31,25 +52,6 @@
     
   </div>
 
-  <div id="sync-app">
-    
-    <header>
-      <h1>Sync Todos</h1>
-      <input id="new-replication" type=url placeholder="http://localhost:5984/todos-backbone">
-    </header>
-
-    <section id="sync-main">
-      <ul id="replication-list"></ul>
-    </section>
-
-    <footer>
-      <div id=sync-stats>
-        <div id="replication-count"></div>
-      </div>
-    </footer>
-    
-  </div>
-  
   <div id="instructions">
     Double-click to edit a todo.
   </div>
@@ -62,10 +64,12 @@
     <br />Adapted to PouchDB by: <a href="http://die-tf.de">TF</a>.
   </div>
 
-  <script src="vendor.js"></script>
-  <script src="lib.js"></script>
+  <script src="pouch.alpha.js"></script>
+  <script src="underscore-1.3.1.js"></script>
+  <script src="backbone.js"></script>
+  <script src="backbone-pouchdb.js"></script>
+  <script src="backbone-couchdb.js"></script>
   <script src="todos.js"></script>
-  <script src="sync.js"></script>
 
   <!-- Templates -->
 
@@ -93,7 +97,10 @@
   </script>
 
   <script type="text/template" id="sync-stats-template">
-    <div class="replication-count">Syncing with <b><%= count %></b> <%= count == 1 ? 'database' : 'databases' %></div>
+    <div class=docs>
+      <%= read %>↔<%= written %>
+      </div>
+    <div class="replication-count">Syncing <b><%= count %></b> <%= count == 1 ? 'database' : 'databases' %></div>
   </script>
 
   </body>
