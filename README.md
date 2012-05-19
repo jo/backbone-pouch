@@ -35,8 +35,23 @@ This will proxy requests to http://localhost:1234 to a local CouchDB running on 
 
 #### Install as Couchapp
 
+You need the following libraries and programs installed on your system:
+
+* make
+* ruby
+* ruby-json
+* curl
+
+`cd` to the apps directory:
+
     cd examples/todos-sync
-    make create URL=http://localhost:5984/todos-backbone  # create database
-    make URL=http://localhost:5984/todos-backbone         # push application
+
+Create the todos-backbone database:
+
+    make create URL=http://localhost:5984/todos-backbone
+
+Install the Couchapp:
+
+    make URL=http://localhost:5984/todos-backbone
 
 and visit `http://localhost:5984/todos-backbone/_design/todos/index.html`
