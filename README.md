@@ -35,7 +35,7 @@ This will proxy requests to http://localhost:1234 to a local CouchDB running on 
 
 #### Install as Couchapp
 
-    cd examples/todos-couchapp
+    cd examples/todos-sync
     make create URL=http://localhost:5984/todos-backbone  # create database
     make URL=http://localhost:5984/todos-backbone         # push application
 
