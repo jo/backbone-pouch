@@ -26,9 +26,9 @@ or run it locally from your filesystem.
 
 #### Run from Filesystem
 
-  git clone https://github.com/daleharvey/CORS-Proxy.git
-  cd CORS-Proxy
-  node server.js
+    git clone https://github.com/daleharvey/CORS-Proxy.git
+    cd CORS-Proxy
+    node server.js
 
 This will proxy requests to http://localhost:1234 to a local CouchDB running on http://localhost:5984, adding CORS headers.
 
