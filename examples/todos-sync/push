@@ -23,12 +23,36 @@ end
 APP = JSON.parse ARGF.read
 APP.freeze
 
+def display_response response
+  response.each do |key, value|
+    STDERR.puts '  %s: %s' % [key, value]
+  end
+end
+
 def spinner number, total
+  if total < 10
+    STDERR.print "%d %s pushed" % [number, number === 1 ? 'doc' : 'docs']
+    return
+  end
   STDERR.print "\r"
   STDERR.print "%.2f%% (%d/%d)" % [number*100.0/total, number, total]
 end
 
 def push url
+  # check database / server
+  info = `curl --insecure -s -XGET #{url} -H 'Content-Type:application/json'`
+  begin
+    info = JSON.parse info
+  rescue JSON::ParserError
+    STDERR.puts "Error: Can't connect to CouchDB server"
+    exit
+  end
+  if info["error"]
+    STDERR.puts "Error: Can't connect to database"
+    display_response info
+    exit
+  end
+
   STDERR.puts '* pushing %s' % url
 
   app = APP.dup
@@ -49,7 +73,20 @@ def push url
       begin
         file << { "keys" => keys }.to_json
         file.rewind
-        current = JSON.parse `curl --insecure -s -XPOST #{url}/_all_docs -H 'Content-Type:application/json' -d@'#{file.path}'`
+        current = `curl --insecure -s -XPOST #{url}/_all_docs -H 'Content-Type:application/json' -d@'#{file.path}'`
+        begin
+          current = JSON.parse current
+        rescue JSON::ParserError
+          STDERR.puts "Error: Can't connect to CouchDB server"
+          exit
+        end
+
+        # check response
+        if current["error"]
+          STDERR.puts "Error: Failed to fetch revisions"
+          display_response current
+          exit
+        end
       ensure
         file.close
       end
@@ -68,7 +105,23 @@ def push url
     begin
       file << { "docs" => apps }.to_json
       file.rewind
-      JSON.parse(`curl --insecure -s -XPOST #{url}/_bulk_docs -d@'#{file.path}' -H 'Content-Type: application/json'`)
+      response = `curl --insecure -s -XPOST #{url}/_bulk_docs -d@'#{file.path}' -H 'Content-Type: application/json'`
+
+      begin
+        response = JSON.parse response
+      rescue JSON::ParserError
+        STDERR.puts "Error: Can't connect to CouchDB server"
+        exit
+      end
+
+      # check response
+      response.each do |resp|
+        if resp["error"]
+          STDERR.puts "Error: Failed to push app " + resp["id"]
+          display_response resp
+          exit
+        end
+      end
     ensure
       file.close!
     end
