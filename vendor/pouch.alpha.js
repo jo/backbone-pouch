@@ -401,9 +401,10 @@ Pouch.Errors = {
   }
 
   var stringCollate = function(a, b) {
-    // Chrome (v8) doesnt implement localecompare and orders by ascii value
-    // so tests will break
-    return a.localeCompare(b);
+    // See: https://github.com/daleharvey/pouchdb/issues/40
+    // This is incompatible with the CouchDB implementation, but its the
+    // best we can do for now
+    return (a === b) ? 0 : ((a > b) ? 1 : -1);
   }
 
   var objectCollate = function(a, b) {
@@ -1019,6 +1020,11 @@ var HttpPouch = function(opts, callback) {
   };
 
   api.info = function(callback) {
+    ajax({
+      auth: host.auth,
+      type:'GET',
+      url: genUrl(host, ''),
+    }, callback);
   };
 
   api.get = function(id, opts, callback) {
@@ -1029,6 +1035,9 @@ var HttpPouch = function(opts, callback) {
     var params = [];
     if (opts.revs) {
       params.push('revs=true');
+    }
+    if (opts.revs_info) {
+      params.push('revs_info=true');
     }
     if (opts.rev) {
       params.push('rev=' + opts.rev);
@@ -1045,9 +1054,9 @@ var HttpPouch = function(opts, callback) {
       url: genUrl(host, id + params)
     };
 
-    // if (/\//.test(id) && !/^_local/.test(id)) {
-    //   options.dataType = false;
-    // }
+    if (/\//.test(id) && !/^_local/.test(id)) {
+      options.dataType = false;
+    }
 
     ajax(options, function(err, doc, xhr) {
       if (err) {
@@ -1058,6 +1067,15 @@ var HttpPouch = function(opts, callback) {
   };
 
   api.remove = function(doc, opts, callback) {
+    if (opts instanceof Function) {
+      callback = opts;
+      opts = {};
+    }
+    ajax({
+      auth: host.auth,
+      type:'DELETE',
+      url: genUrl(host, doc._id) + '?rev=' + doc._rev
+    }, callback);
   };
 
   api.putAttachment = function(id, rev, doc, type, callback) {
@@ -1070,15 +1088,29 @@ var HttpPouch = function(opts, callback) {
     }, callback);
   };
 
-  api.put = api.post = function(doc, opts, callback) {
+  api.put = function(doc, opts, callback) {
     if (opts instanceof Function) {
       callback = opts;
       opts = {};
     }
     ajax({
       auth: host.auth,
-      type:'PUT',
+      type: 'PUT',
       url: genUrl(host, doc._id),
+      data: doc
+    }, callback);
+  };
+
+
+  api.post = function(doc, opts, callback) {
+    if (opts instanceof Function) {
+      callback = opts;
+      opts = {};
+    }
+    ajax({
+      auth: host.auth,
+      type: 'POST',
+      url: genUrl(host, ''),
       data: doc
     }, callback);
   };
@@ -1204,8 +1236,7 @@ HttpPouch.valid = function() {
   return true;
 }
 
-Pouch.adapter('http', HttpPouch);
-// While most of the IDB behaviors match between implementations a
+Pouch.adapter('http', HttpPouch);// While most of the IDB behaviors match between implementations a
 // lot of the names still differ. This section tries to normalize the
 // different objects & methods.
 window.indexedDB = window.indexedDB ||
