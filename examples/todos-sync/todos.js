@@ -206,10 +206,6 @@ $(function(){
           onChange: function(change) {
             var todo = Todos.get(change.id);
 
-            // hackfix for pouchdb
-            delete change.doc._junk;
-            change.doc._rev = change.changes[change.changes.length - 1].rev;
-
             if (todo) {
               todo.set(change.doc);
             } else {

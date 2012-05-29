@@ -969,7 +969,11 @@ function ajax(options, callback) {
     },
     error: function (err) {
       if (err) {
-        call(callback, err);
+        var errObj = {status: err.status};
+        try {
+          errObj = $.extend({}, errObj, JSON.parse(err.responseText));
+        } catch (e) {}
+        call(callback, errObj);
       } else {
         call(callback, true);
       }
@@ -1054,7 +1058,9 @@ var HttpPouch = function(opts, callback) {
       url: genUrl(host, id + params)
     };
 
-    if (/\//.test(id) && !/^_local/.test(id)) {
+    var parts = id.split('/');
+    if ((parts.length > 1 && parts[0] !== '_design' && parts[0] !== '_local') ||
+        (parts.length > 2 && parts[0] === '_design' && parts[0] !== '_local')) {
       options.dataType = false;
     }
 
@@ -1093,10 +1099,21 @@ var HttpPouch = function(opts, callback) {
       callback = opts;
       opts = {};
     }
+
+    var params = [];
+    if (opts && typeof opts.new_edits !== 'undefined') {
+      params.push('new_edits=' + opts.new_edits);
+    }
+
+    params = params.join('&');
+    if (params !== '') {
+      params = '?' + params;
+    }
+
     ajax({
       auth: host.auth,
       type: 'PUT',
-      url: genUrl(host, doc._id),
+      url: genUrl(host, doc._id) + params,
       data: doc
     }, callback);
   };
@@ -1136,7 +1153,30 @@ var HttpPouch = function(opts, callback) {
       callback = opts;
       opts = {};
     }
-    ajax({auth: host.auth, type:'GET', url: genUrl(host, '_all_docs')}, callback);
+    var params = [];
+    if (opts.conflicts) {
+      params.push('conflicts=true');
+    }
+    if (opts.include_docs) {
+      params.push('include_docs=true');
+    }
+    if (opts.startkey) {
+      params.push('startkey=' + encodeURIComponent(JSON.stringify(opts.startkey)));
+    }
+    if (opts.endkey) {
+      params.push('endkey=' + encodeURIComponent(JSON.stringify(opts.endkey)));
+    }
+
+    params = params.join('&');
+    if (params !== '') {
+      params = '?' + params;
+    }
+
+    ajax({
+      auth: host.auth,
+      type:'GET',
+      url: genUrl(host, '_all_docs' + params)
+    }, callback);
   };
 
   api.changes = function(opts, callback) {
@@ -1153,6 +1193,12 @@ var HttpPouch = function(opts, callback) {
     }
     if (opts.continuous) {
       params += '&feed=longpoll';
+    }
+    if (opts.conflicts) {
+      params += '&conflicts=true';
+    }
+    if (opts.descending) {
+      params += '&descending=true';
     }
     if (opts.filter && typeof opts.filter === 'string') {
       params += '&filter=' + opts.filter;
@@ -1177,7 +1223,9 @@ var HttpPouch = function(opts, callback) {
               !opts.filter.apply(this, [c.doc])) {
             return;
           }
-          call(opts.onChange, c);
+          if (!opts.aborted) {
+            call(opts.onChange, c);
+          }
         });
       }
       if (res && opts.continuous) {
@@ -1189,6 +1237,7 @@ var HttpPouch = function(opts, callback) {
 
     return {
       cancel: function() {
+        opts.aborted = true;
         xhr.abort();
       }
     };
@@ -1451,7 +1500,7 @@ var IdbPouch = function(opts, callback) {
           return;
         }
 
-        delete result.data.junk;
+        delete result.data._junk;
 
         var c = {
           id: result.metadata.id,
@@ -1856,6 +1905,7 @@ var IdbPouch = function(opts, callback) {
           if (opts.filter && !opts.filter.apply(this, [c.doc])) {
             return;
           }
+          delete c.doc._junk;
           call(opts.onChange, c);
         });
         return call(opts.complete, null, {results: results});
@@ -1873,6 +1923,7 @@ var IdbPouch = function(opts, callback) {
           changes: collectLeaves(doc.rev_tree),
           doc: cursor.value,
         };
+        c.doc._rev = doc.rev;
 
         if (doc.deleted) {
           c.deleted = true;
