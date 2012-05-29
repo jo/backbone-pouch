@@ -54,4 +54,9 @@ Install the Couchapp:
 
     make URL=http://localhost:5984/todos-backbone
 
+If your CouchDB is not in admin party mode, supply the credentials in the form:
+
+   make URL=http://username:password@localhost:5984/todos-backbone
+
+
 and visit `http://localhost:5984/todos-backbone/_design/todos/index.html`
