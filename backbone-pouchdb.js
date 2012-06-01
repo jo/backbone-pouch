@@ -1,62 +1,65 @@
 // Store models in *PouchDB*.
 Backbone.sync = (function() {
-  _dbs = {};
+  // match read request to get, query or allDocs call
+  function read(db, model, options, callback) {
+    // get single model
+    if (model.id) return db.get(model.id, options, callback);
 
-  function db(url) {
-    function get(callback) {
-      if (_dbs[url]) {
-        callback(_dbs[url].err, _dbs[url].db);
-      } else {
-        console.warn('not ready, try again in 10ms... ' + url);
-        _.delay(function() {
-          get(callback);
-        }, 10);
-      }
-    }
+    // query view
+    if (options.view) return db.query(options.view, options, callback);
 
-    return get;
+    // all docs
+    db.allDocs(options, callback);
   }
 
-  function initialize(url) {
-    new Pouch(url, function(err, db) {
-      _dbs[url] = {
-        err: err,
-        db: db
-      };
-    });
-
-    return db(url);
-  }
-
+  // the sync adapter function
   var sync = function(method, model, options) {
     var pouch = model.pouch || (model.collection && model.collection.pouch);
 
+    options || (options = {});
+    options.error || (options.error = function() {});
+    options.success || (options.success = function() {});
+
     if (!pouch) {
-      console.error('missing pouch: ' + method);
-      console.log(model);
-      return;
+      throw('missing pouch: ' + method);
     }
 
-    function fn(err, resp) {
+    function callback(err, resp) {
       err === null ? options.success(resp) : options.error(err);
     }
 
-    pouch(function(err, db) {
-      if (err === null) {
-        switch (method) {
-          case "read":   model.id ? db.get(model.id, { conflicts: true }, fn) : db.allDocs({ include_docs: true, conflicts: true }, fn); break;
-          case "create": db.put(model.toJSON(), fn);                                               break;
-          case "update": db.post(model.toJSON(), fn);                                              break;
-          case "delete": db.remove(model.toJSON(), fn);                                            break;
-        }
-      } else {
-        options.error(err);
+    pouch(function(err, db, defaults) {
+      if (err) return options.error(err);
+      var opts = _.extend({}, defaults, options);
+      switch (method) {
+        case "read":   read(db, model, opts, callback);           break;
+        case "create": db.put(model.toJSON(), opts, callback);    break;
+        case "update": db.post(model.toJSON(), opts, callback);   break;
+        case "delete": db.remove(model.toJSON(), opts, callback); break;
       }
     });
   };
 
-  sync.pouch = initialize;
-  sync.dbs = _dbs;
+  // extend the sync adapter function
+  // to init pouch via Backbone.sync.pouch(url, options)
+  sync.pouch = function(url, options) {
+    var err, db;
+
+    options || (options = {});
+    options.read || (options.read = {});
+
+    return function(callback) {
+      if (err || db) {
+        // we alreay have a pouch adapter available
+        callback(err, db, options);
+      } else {
+        // open pouch
+        new Pouch(url, function(e, d) {
+          callback(err = e, db = d, options);
+        });
+      }
+    }
+  };
 
   return sync;
 })();
