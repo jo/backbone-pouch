@@ -17,7 +17,7 @@ $(function(){
     // Default attributes for the todo item.
     defaults: function() {
       return {
-        type: 'backbone.todo',
+        type: 'todo',
         title: "empty todo...",
         order: Todos.nextOrder(),
         done: false
@@ -53,15 +53,15 @@ $(function(){
     model: Todo,
 
     // Save all of the todo items in the `"todos-backbone"` database.
-    pouch: Backbone.sync.pouch('idb://todos-backbone'),
-
-    parse: function(response) {
-      var type = this.model.prototype.defaults().type;
-
-      return _.filter(Backbone.Collection.prototype.parse(response), function(doc) {
-        return doc.type === type;
-      });
-    },
+    pouch: Backbone.sync.pouch('idb://todos-backbone', {
+      reduce: false,
+      include_docs: true,
+      view: {
+        map: function(doc) {
+          if (doc.type === 'todo') emit([doc.order, doc.title], null);
+        }
+      }
+    }),
 
     // Filter down the list of all todo items that are finished.
     done: function() {
@@ -287,7 +287,11 @@ $(function(){
   // -----------------
 
   // Our **Replication** model has an `url` attribute.
-  var Replication = Backbone.Model.extend();
+  var Replication = Backbone.Model.extend({
+    defaults: {
+      type: 'replication'
+    }
+  });
 
   // Replication Collection
   // ----------------------
@@ -297,9 +301,25 @@ $(function(){
     // Reference to this collection's model.
     model: Replication,
 
-    // Save replications in the `"replications-backbone"` database.
-    // TODO: support views
-    pouch: Backbone.sync.pouch('idb://replications-backbone'),
+    // Save replications in the `"todos-backbone"` database.
+    pouch: Backbone.sync.pouch('idb://todos-backbone', {
+      reduce: false,
+      include_docs: true,
+      // FIXME: currently not possible,
+      //        that view is conflicting with the one in TodoList
+      // view: {
+      //   map: function(doc) {
+      //     if (doc.type === 'replication') emit([doc.url], null);
+      //   }
+      // }
+    }),
+
+    // TODO: remove when view is fixed, see below
+    parse: function(response) {
+      return _.filter(Backbone.Collection.prototype.parse(response), function(doc) {
+        return doc.type === 'replication';
+      })
+    },
 
     // Replications are sorted by url.
     comparator: function(replication) {
