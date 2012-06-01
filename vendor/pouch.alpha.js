@@ -632,12 +632,18 @@ Pouch.Errors = {
         continuous: continuous,
         since: checkpoint,
         onChange: function(change) {
+          last_seq = change.seq;
           results.push(change);
           result.docs_read++;
           pending++;
           var diff = {};
           diff[change.id] = change.changes.map(function(x) { return x.rev; });
           target.revsDiff(diff, function(err, diffs) {
+            if (Object.keys(diffs).length === 0) {
+              pending--;
+              isCompleted();
+              return;
+            }
             for (var id in diffs) {
               diffs[id].missing.map(function(rev) {
                 src.get(id, {revs: true, rev: rev, attachments: true}, function(err, doc) {
@@ -652,9 +658,6 @@ Pouch.Errors = {
           });
         },
         complete: function(err, res) {
-          if (res) {
-            last_seq = res.last_seq;
-          }
           completed = true;
           isCompleted();
         }
@@ -1214,12 +1217,15 @@ var HttpPouch = function(opts, callback) {
   };
 
   api.changes = function(opts, callback) {
+
     if (opts instanceof Function) {
       opts = {complete: opts};
     }
     if (callback) {
       opts.complete = callback;
     }
+
+    console.info('Start Changes Feed: continuous=' + opts.continuous);
 
     var params = '?style=all_docs'
     if (opts.include_docs || opts.filter && typeof opts.filter === 'function') {
@@ -1241,36 +1247,40 @@ var HttpPouch = function(opts, callback) {
     var xhr;
 
     var fetch = function(since, callback) {
-      var opts = {
+      var xhrOpts = {
         auth: host.auth, type:'GET',
         url: genUrl(host, '_changes' + params + '&since=' + since)
       };
-      xhr = ajax(opts, function(err, res) {
+      if (opts.aborted) {
+        return;
+      }
+      xhr = ajax(xhrOpts, function(err, res) {
         callback(res);
       });
     }
 
-    fetch(opts.since || 0, function fetch_cb(res) {
+    var fetched = function(res) {
       if (res && res.results) {
         res.results.forEach(function(c) {
-          if (opts.filter && typeof opts.filter === 'function' &&
-              !opts.filter.apply(this, [c.doc])) {
+          var hasFilter = opts.filter && typeof opts.filter === 'function';
+          if (opts.aborted || hasFilter && !opts.filter.apply(this, [c.doc])) {
             return;
           }
-          if (!opts.aborted) {
-            call(opts.onChange, c);
-          }
+          call(opts.onChange, c);
         });
       }
       if (res && opts.continuous) {
-        fetch(res.last_seq, fetch_cb);
+        fetch(res.last_seq, fetched);
       } else {
         call(opts.complete, null, res);
       }
-    });
+    }
+
+    fetch(opts.since || 0, fetched);
 
     return {
       cancel: function() {
+        console.info('Cancel Changes Feed');
         opts.aborted = true;
         xhr.abort();
       }
@@ -1282,7 +1292,12 @@ var HttpPouch = function(opts, callback) {
       callback = opts;
       opts = {};
     }
-    ajax({auth: host.auth, type:'POST', url: genUrl(host, '_revs_diff'), data: req}, function(err, res) {
+    ajax({
+      auth: host.auth,
+      type:'POST',
+      url: genUrl(host, '_revs_diff'),
+      data: req
+    }, function(err, res) {
       call(callback, null, res);
     });
   };
@@ -1319,7 +1334,8 @@ HttpPouch.valid = function() {
   return true;
 }
 
-Pouch.adapter('http', HttpPouch);// While most of the IDB behaviors match between implementations a
+Pouch.adapter('http', HttpPouch);
+// While most of the IDB behaviors match between implementations a
 // lot of the names still differ. This section tries to normalize the
 // different objects & methods.
 window.indexedDB = window.indexedDB ||
@@ -1341,6 +1357,9 @@ window.IDBDatabaseException = window.IDBDatabaseException ||
 function sum(values) {
   return values.reduce(function(a, b) { return a + b; }, 0);
 }
+
+// TODO: This shouldnt be global, but embedded version lost listeners
+var testListeners = {};
 
 var IdbPouch = function(opts, callback) {
 
@@ -1438,6 +1457,9 @@ var IdbPouch = function(opts, callback) {
     if (opts instanceof Function) {
       callback = opts;
       opts = {};
+    }
+    if (!opts) {
+      opts = {}
     }
 
     if (!req.docs) {
@@ -1541,7 +1563,6 @@ var IdbPouch = function(opts, callback) {
           changes: collectLeaves(result.metadata.rev_tree),
           doc: result.data
         };
-
         api.changes.emit(c);
       });
       call(callback, null, aresults);
@@ -1585,7 +1606,6 @@ var IdbPouch = function(opts, callback) {
 
       for (var key in docInfo.data._attachments) {
         if (!docInfo.data._attachments[key].stub) {
-          docInfo.data._attachments[key].stub = true;
           var data = docInfo.data._attachments[key].data;
           var digest = 'md5-' + Crypto.MD5(data);
           delete docInfo.data._attachments[key].data;
@@ -1735,6 +1755,10 @@ var IdbPouch = function(opts, callback) {
             return prev.concat(collectRevs(current));
           }, []);
         }
+        if (opts.conflicts) {
+          doc._conflicts = collectConflicts(metadata.rev_tree);
+        }
+
         if (opts.attachments && doc._attachments) {
           var attachments = Object.keys(doc._attachments);
           var recv = 0;
@@ -1859,7 +1883,8 @@ var IdbPouch = function(opts, callback) {
   api.putAttachment = function(id, rev, doc, type, callback) {
     var docId = id.split('/')[0];
     var attachId = id.split('/')[1];
-    api.get(docId, function(err, obj) {
+    api.get(docId, {attachments: true}, function(err, obj) {
+      obj._attachments || (obj._attachments = {});
       obj._attachments[attachId] = {
         content_type: type,
         data: btoa(doc)
@@ -1913,6 +1938,9 @@ var IdbPouch = function(opts, callback) {
     if (!opts.seq) {
       opts.seq = 0;
     }
+    if (opts.since) {
+      opts.seq = opts.since;
+    }
 
     var descending = 'descending' in opts ? opts.descending : false;
     descending = descending ? IDBCursor.PREV : null;
@@ -1928,14 +1956,14 @@ var IdbPouch = function(opts, callback) {
         opts.filter = filter;
         txn = idb.transaction([DOC_STORE, BY_SEQ_STORE]);
         var req = txn.objectStore(BY_SEQ_STORE)
-          .openCursor(IDBKeyRange.lowerBound(opts.seq), descending);
+          .openCursor(IDBKeyRange.lowerBound(opts.seq, true), descending);
         req.onsuccess = onsuccess;
         req.onerror = onerror;
       });
     } else {
       txn = idb.transaction([DOC_STORE, BY_SEQ_STORE]);
       var req = txn.objectStore(BY_SEQ_STORE)
-        .openCursor(IDBKeyRange.lowerBound(opts.seq), descending);
+        .openCursor(IDBKeyRange.lowerBound(opts.seq, true), descending);
       req.onsuccess = onsuccess;
       req.onerror = onerror;
     }
@@ -2004,7 +2032,7 @@ var IdbPouch = function(opts, callback) {
       // is added
       return {
         cancel: function() {
-          delete api.changes.listeners[id];
+          delete testListeners[id];
         }
       }
     }
@@ -2014,8 +2042,8 @@ var IdbPouch = function(opts, callback) {
 
   api.changes.emit = function() {
     var a = arguments;
-    for (var i in api.changes.listeners) {
-      var opts = api.changes.listeners[i];
+    for (var i in testListeners) {
+      var opts = testListeners[i];
       if (opts.filter && !opts.filter.apply(this, [a[0].doc])) {
         return;
       }
@@ -2024,7 +2052,7 @@ var IdbPouch = function(opts, callback) {
   };
 
   api.changes.addListener = function(id, opts, callback) {
-    api.changes.listeners[id] = opts;
+    testListeners[id] = opts;
   };
 
   api.replicate = {};
@@ -2092,11 +2120,15 @@ var IdbPouch = function(opts, callback) {
     var current;
 
     emit = function(key, val) {
-      results.push({
+      var viewRow = {
         id: current._id,
         key: key,
         value: val
-      });
+      }
+      if (options.include_docs) {
+        viewRow.doc = current.doc;
+      }
+      results.push(viewRow);
     }
 
     request.onsuccess = function (e) {
@@ -2132,12 +2164,14 @@ var IdbPouch = function(opts, callback) {
           }
         }
       } else {
+        var metadata = e.target.result.value;
         var nreq = txn
-          .objectStore(BY_SEQ_STORE).get(e.target.result.value.seq)
+          .objectStore(BY_SEQ_STORE).get(metadata.seq)
           .onsuccess = function(e) {
-            current = e.target.result;
-            if (options.complete) {
-              fun.map.apply(mapContext, [current]);
+            current = {doc: e.target.result, metadata: metadata};
+            current.doc._rev = current.metadata.rev;
+            if (options.complete && !current.metadata.deleted) {
+              fun.map.apply(mapContext, [current.doc]);
             }
             cursor['continue']();
           };
@@ -2171,4 +2205,5 @@ IdbPouch.destroy = function(name, callback) {
   };
 };
 
-Pouch.adapter('idb', IdbPouch); })(this);
+Pouch.adapter('idb', IdbPouch);
+ })(this);
