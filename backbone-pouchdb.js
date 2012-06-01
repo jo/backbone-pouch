@@ -43,16 +43,21 @@ Backbone.sync = (function() {
   // extend the sync adapter function
   // to init pouch via Backbone.sync.pouch(url, options)
   sync.pouch = function(url, options) {
-    var err, db;
+    var err, db, initialized,
+        wait = 1;
 
     options || (options = {});
-    options.read || (options.read = {});
 
-    return function(callback) {
-      if (err || db) {
-        // we alreay have a pouch adapter available
-        callback(err, db, options);
+    return function open(callback) {
+      if (initialized) {
+        if (err || db) {
+          // we alreay have a pouch adapter available
+          callback(err, db, options);
+        } else {
+          _.delay(open, wait *= 2);
+        }
       } else {
+        initialized = true;
         // open pouch
         new Pouch(url, function(e, d) {
           callback(err = e, db = d, options);
