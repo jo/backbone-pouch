@@ -28,7 +28,7 @@ Backbone.Model.prototype.parse = function(response) {
 
 // parse collections
 Backbone.Collection.prototype.parse = function(response) {
-  return response.rows && _.map(response.rows, function(row) { return row.doc });
+  return response.rows && _.map(response.rows, function(row) { return row.doc || row.value });
 };
 
 
