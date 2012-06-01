@@ -301,25 +301,10 @@ $(function(){
     // Reference to this collection's model.
     model: Replication,
 
-    // Save replications in the `"todos-backbone"` database.
-    pouch: Backbone.sync.pouch('idb://todos-backbone', {
-      reduce: false,
+    // Save replications in the `"replications-backbone"` database.
+    pouch: Backbone.sync.pouch('idb://replications-backbone', {
       include_docs: true,
-      // FIXME: currently not possible,
-      //        that view is conflicting with the one in TodoList
-      // view: {
-      //   map: function(doc) {
-      //     if (doc.type === 'replication') emit([doc.url], null);
-      //   }
-      // }
     }),
-
-    // TODO: remove when view is fixed, see below
-    parse: function(response) {
-      return _.filter(Backbone.Collection.prototype.parse(response), function(doc) {
-        return doc.type === 'replication';
-      })
-    },
 
     // Replications are sorted by url.
     comparator: function(replication) {
