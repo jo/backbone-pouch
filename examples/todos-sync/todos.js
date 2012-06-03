@@ -206,6 +206,13 @@ $(function(){
           onChange: function(change) {
             var todo = Todos.get(change.id);
 
+            if (change.doc && change.doc._deleted) {
+              if (todo) {
+                Todos.remove(todo);
+              }
+              return;
+            }
+
             if (todo) {
               todo.set(change.doc);
             } else {
@@ -303,7 +310,13 @@ $(function(){
 
     // Save replications in the `"replications-backbone"` database.
     pouch: Backbone.sync.pouch('idb://replications-backbone', {
+      reduce: false,
       include_docs: true,
+      view: {
+        map: function(doc) {
+          if (doc.type === 'replication') emit([doc.url], null);
+        }
+      }
     }),
 
     // Replications are sorted by url.
