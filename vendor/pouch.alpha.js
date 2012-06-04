@@ -1373,17 +1373,15 @@ window.IDBDatabaseException = window.IDBDatabaseException ||
 // Newer webkits expect strings for transaction + cursor paramters
 // older webkit + older firefox require constants, we can drop
 // the constants when both stable releases use strings
-IDBTransaction = IDBTransaction || {};
-IDBTransaction.READ_WRITE = IDBTransaction.READ_WRITE || 'readwrite';
-IDBTransaction.READ = IDBTransaction.READ || 'readonly';
+IDBTransaction = IDBTransaction || {
+  READ_WRITE: 'readwrite',
+  READ: 'readonly'
+};
 
-IDBCursor = IDBCursor || {};
-IDBCursor.NEXT = IDBCursor.NEXT || 'next';
-IDBCursor.PREV = IDBCursor.PREV || 'prev';
-
-function sum(values) {
-  return values.reduce(function(a, b) { return a + b; }, 0);
-}
+IDBCursor = IDBCursor || {
+  NEXT: 'next',
+  PREV: 'prev'
+};
 
 var idbError = function(callback) {
   return function(event) {
@@ -2049,6 +2047,10 @@ var IdbPouch = function(opts, callback) {
 
     if (!options.complete) {
       return;
+    }
+
+    function sum(values) {
+      return values.reduce(function(a, b) { return a + b; }, 0);
     }
 
     var txn = idb.transaction([DOC_STORE, BY_SEQ_STORE], IDBTransaction.READ);
