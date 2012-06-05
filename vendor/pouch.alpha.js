@@ -730,7 +730,7 @@ var parseDoc = function(doc, newEdits) {
     if (!doc._id) {
       doc._id = Math.uuid();
     }
-    var newRevId = Math.uuid(32, 16);
+    var newRevId = Math.uuid(32, 16).toLowerCase();
     var nRevNum;
     if (doc._rev) {
       var revInfo = /^(\d+)-(.+)$/.exec(doc._rev);
@@ -1373,15 +1373,13 @@ window.IDBDatabaseException = window.IDBDatabaseException ||
 // Newer webkits expect strings for transaction + cursor paramters
 // older webkit + older firefox require constants, we can drop
 // the constants when both stable releases use strings
-IDBTransaction = IDBTransaction || {
-  READ_WRITE: 'readwrite',
-  READ: 'readonly'
-};
+IDBTransaction = IDBTransaction || {};
+IDBTransaction.READ_WRITE = IDBTransaction.READ_WRITE || 'readwrite';
+IDBTransaction.READ = IDBTransaction.READ || 'readonly';
 
-IDBCursor = IDBCursor || {
-  NEXT: 'next',
-  PREV: 'prev'
-};
+IDBCursor = IDBCursor || {};
+IDBCursor.NEXT = IDBCursor.NEXT || 'next';
+IDBCursor.PREV = IDBCursor.PREV || 'prev';
 
 var idbError = function(callback) {
   return function(event) {
@@ -1449,7 +1447,15 @@ var IdbPouch = function(opts, callback) {
       return;
     }
 
-    call(callback, null, api);
+    // TODO: This is a really inneficient way of finding the last
+    // update sequence, cant think of an alterative right now
+    api.changes(function(err, changes) {
+      if (changes.results.length) {
+        update_seq = changes.results[changes.results.length - 1].seq;
+      }
+      call(callback, null, api);
+    });
+
   };
 
   req.onerror = idbError(callback);
@@ -1550,10 +1556,11 @@ var IdbPouch = function(opts, callback) {
           return;
         }
         var metadata = result.metadata;
+        var rev = winningRev(metadata.rev_tree[0].pos, metadata.rev_tree[0].ids);
         aresults.push({
           ok: true,
           id: metadata.id,
-          rev: winningRev(metadata.rev_tree[0].pos, metadata.rev_tree[0].ids),
+          rev: rev,
         });
 
         if (/_local/.test(metadata.id)) {
@@ -1566,6 +1573,8 @@ var IdbPouch = function(opts, callback) {
           changes: collectLeaves(metadata.rev_tree),
           doc: result.data
         };
+        change.doc._rev = rev;
+        update_seq++;
         IdbPouch.Changes.emitChange(name, change);
       });
       call(callback, null, aresults);
@@ -1697,7 +1706,10 @@ var IdbPouch = function(opts, callback) {
           }, []);
         }
         if (opts.conflicts) {
-          doc._conflicts = collectConflicts(metadata.rev_tree);
+          var conflicts = collectConflicts(metadata.rev_tree);
+          if (conflicts.length) {
+            doc._conflicts = conflicts;
+          }
         }
 
         if (opts.attachments && doc._attachments) {
@@ -2191,6 +2203,9 @@ IdbPouch.Changes = (function() {
       var opts = listeners[db][i];
       if (opts.filter && !opts.filter.apply(this, [change.doc])) {
         return;
+      }
+      if (!opts.include_docs) {
+        delete change.doc;
       }
       opts.onChange.apply(opts.onChange, [change]);
     }
