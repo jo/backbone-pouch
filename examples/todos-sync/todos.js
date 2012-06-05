@@ -56,6 +56,7 @@ $(function(){
     pouch: Backbone.sync.pouch('idb://todos-backbone', {
       reduce: false,
       include_docs: true,
+      conflicts: true,
       view: {
         map: function(doc) {
           if (doc.type === 'todo') emit([doc.order, doc.title], null);
@@ -201,35 +202,38 @@ $(function(){
 
     listen: function listen() {
       Todos.pouch(function(err, db) {
-        // get changes since info.update_seq
-        var change = db.changes({
-          onChange: function(change) {
-            var todo = Todos.get(change.id);
+        db.info(function(err, info) {
+          // get changes since info.update_seq
+          var change = db.changes({
+            since: info.update_seq,
+            continuous: true,
+            conflicts: true,
+            include_docs: true,
+            filter: function(doc) {
+              return doc.type === 'todo';
+            },
+            onChange: function(change) {
+              var todo = Todos.get(change.id);
 
-            if (change.doc && change.doc._deleted) {
-              if (todo) {
-                Todos.remove(todo);
+              if (change.doc && change.doc._deleted) {
+                if (todo) {
+                  Todos.remove(todo);
+                }
+                return;
               }
-              return;
-            }
 
-            if (todo) {
-              todo.set(change.doc);
-            } else {
-              todo = _.first(Todos.parse({ rows: [{ doc: change.doc }] }));
-              todo && Todos.add(todo);
+              if (todo) {
+                todo.set(change.doc);
+              } else {
+                todo = _.first(Todos.parse({ rows: [{ doc: change.doc }] }));
+                todo && Todos.add(todo);
+              }
+            },
+            error: function(e) {
+              console.error('Changes feed died');
+              console.log(e);
             }
-          },
-          error: function(e) {
-            console.error('Changes feed died');
-            console.log(e);
-          },
-          continuous: true,
-          // TODO:
-          // sice & info.update_seq is currently not supported by pouchdb
-          //  db.info(function(err, info) {
-          //  });
-          // since: info.update_seq
+          });
         });
       });
     },
@@ -470,21 +474,6 @@ $(function(){
         });
         db.replicate.from(url, { continuous: true }, function(err, resp) {
           pullResps[url] = resp;
-
-        });
-        // get todo changes 
-        var change = db.changes({
-          onChange: renderStats,
-          continuous: true
-        });
-      });
-
-      // get target changes 
-      new Pouch(url, function(err, db) {
-        if (err !== null) return;
-        var change = db.changes({
-          onChange: renderStats,
-          continuous: true
         });
       });
     }
