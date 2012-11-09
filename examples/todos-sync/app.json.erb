@@ -3,44 +3,7 @@
     {
       "_id": "_design/todos",
 
-      "_attachments": {
-        "index.html": {
-          "content_type": "text/html; charset=utf-8",
-          "data": <%=h base64 read 'index.html' %>
-        },
-        "todos.css": {
-          "content_type": "text/css; charset=utf-8",
-          "data": <%=h base64 read 'todos.css' %>
-        },
-        "destroy.png": {
-          "content_type": "image/png; charset=utf-8",
-          "data": <%=h base64 read 'destroy.png' %>
-        },
-        "pouch.alpha.js": {
-          "content_type": "application/javascript; charset=utf-8",
-          "data": <%=h base64 read 'pouch.alpha.js' %>
-        },
-        "underscore-1.3.1.js": {
-          "content_type": "application/javascript; charset=utf-8",
-          "data": <%=h base64 read 'underscore-1.3.1.js' %>
-        },
-        "backbone.js": {
-          "content_type": "application/javascript; charset=utf-8",
-          "data": <%=h base64 read 'backbone.js' %>
-        },
-        "backbone-pouchdb.js": {
-          "content_type": "application/javascript; charset=utf-8",
-          "data": <%=h base64 read 'backbone-pouchdb.js' %>
-        },
-        "backbone-couchdb.js": {
-          "content_type": "application/javascript; charset=utf-8",
-          "data": <%=h base64 read 'backbone-couchdb.js' %>
-        },
-        "todos.js": {
-          "content_type": "application/javascript; charset=utf-8",
-          "data": <%=h base64 read 'todos.js' %>
-        }
-      }
+      "_attachments": <%= attachments %w[index.html todos.css destroy.png pouch.alpha.js underscore-1.3.1.js backbone.js backbone-pouchdb.js backbone-couchdb.js todos.js] %>
     }
   ]
 }

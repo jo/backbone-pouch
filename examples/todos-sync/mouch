@@ -1,0 +1,388 @@
+#!/usr/bin/env ruby
+# Mouch - couch app purism
+# (c) 2011 Johannes J. Schmidt, TF
+#
+# The `mouch` command generates a Mouch App from an app file,
+# specified via APP parameter and pushs it to a CouchDB server.
+# 
+# Usage
+# -----
+#
+#   ./mouch [FILENAME] [URLS]
+#
+# Render app:
+#   ./mouch [FILENAME]
+#   eg:
+#     ./mouch app.json.erb
+#     echo '{ "read_me": <%=h read "README" %> }' | ./mouch
+#
+# Push app:
+#   ./mouch [FILENAME] URLS
+#   eg:
+#     ./mouch app.json.erb http://localhost:5984/myapp
+#     echo '{ "read_me": <%=h read "README" %> }' | ./mouch http://localhost:5984/myapp
+#
+# Running the tests
+#   ./mouch --test
+
+require 'erb'
+require 'json'
+require 'tempfile'
+require 'test/unit'
+
+module Mouch
+  module Build
+    # feel free to add more, but only the ones you really use
+    MIME_TYPES = {
+      ".css"  => "text/css; charset=utf-8",
+      ".gif"  => "image/gif",
+      ".html" => "text/html; charset=utf-8",
+      ".ico"  => "image/vnd.microsoft.icon",
+      ".jpeg" => "image/jpeg",
+      ".jpg"  => "image/jpeg",
+      ".js"   => "application/javascript; charset=utf-8",
+      ".json" => "application/json; charset=utf-8",
+      ".mp4"  => "video/mp4",
+      ".pdf"  => "application/pdf",
+      ".png"  => "image/png",
+      ".svg"  => "image/svg+xml; charset=utf-8",
+      ".tiff" => "image/tiff"
+    }
+
+    # escape content
+    def h content
+      content.to_json
+    end
+
+    # encode base64
+    def base64 content
+      [content].pack("m").gsub(/\s+/,'')
+    end
+
+    # read files
+    # files can be one filename, a pattern
+    # or an array of filenames and/or patterns
+    def read patterns
+      Dir[*patterns].uniq.map do |f|
+        # absolute path
+        filename = File.expand_path(f)
+
+        # I am verbose
+        STDERR.puts filename
+
+        case File.extname(filename)
+        when '.erb'
+          # evaluate erb templates
+          Dir.chdir File.dirname(filename) do
+            ERB.new(File.read(File.basename(filename))).result(binding)
+          end
+        else
+          File.read filename
+        end
+      end.join("\n")
+    end
+
+    # map directory structure
+    # to javascript objects
+    def map dirname, to_json = true
+      out = {}
+      
+      Dir.entries(dirname).each do |f|
+        next if f =~ /^\./
+        file = File.join(dirname, f)
+
+        # templates gets evaluated at build time
+        key = f.sub(/\.erb$/, '')
+
+        # keys are without extension
+        key.sub!(/#{Regexp.escape File.extname(key)}$/, '')
+        
+        # map directories recursively
+        out[key] = File.directory?(file) ? map(file, false) : read(file)
+      end
+
+      to_json ? out.to_json : out
+    end
+
+    # build inline attachment object
+    # with base64 encoded data
+    def attachment filename, patterns = filename, to_json = true
+      out = {
+        "content_type" => MIME_TYPES[File.extname(filename).downcase] || "application/octet-stream",
+        "data" => base64(read(patterns))
+      }
+
+      to_json ? out.to_json : out
+    end
+
+    # map directory structure
+    # to attachments data
+    def attachments patterns, to_json = true
+      out = {}
+
+      Dir[*patterns].each do |file|
+        # templates gets evaluated at build time
+        key = file.sub(/\.erb$/, '')
+
+        if File.directory?(file)
+          out.merge! attachments(Dir[File.join(file, '/*')], false)
+        else
+          out[key] = attachment(file, file, false)
+        end
+      end
+
+      to_json ? out.to_json : out
+    end
+
+    # convert images using ImageMagick
+    def convert patterns, format = 'png', options = nil
+      Dir[*patterns].uniq.map do |f|
+        filename = File.join(Dir.pwd, f)
+
+        # I am verbose
+        STDERR.puts filename
+
+        `convert #{filename} #{options} #{format}:-`
+      end.join("\n")
+    end
+  end
+
+  class App
+    attr_reader :length
+
+    def initialize docs, url, &block
+      @docs = docs
+      @url = url
+      @block = block
+      @length = docs.length
+    end
+
+    def get_revs &block
+      docs = {}
+      @docs.each do |doc| 
+        doc.delete '_rev'
+        docs[doc['_id']] = doc
+      end
+
+      file = Tempfile.new('ids.json')
+      current = {}
+      keys = @docs.map { |d| d['_id'] }.compact
+
+      if keys.length > 0
+        begin
+          file << { "keys" => keys }.to_json
+          file.rewind
+          current = `curl --insecure -s -XPOST #{@url}/_all_docs -H 'Content-Type:application/json' -d@'#{file.path}'`
+          begin
+            current = JSON.parse current
+          rescue JSON::ParserError
+            block.call :error => "Can't connect to CouchDB server"
+          end
+
+          # check response
+          if current["error"]
+            block.call current
+          end
+        ensure
+          file.close
+        end
+
+        # parse response
+        if current['rows']
+          current['rows'].each do |row|
+            doc = docs[row['id']]
+            doc['_rev'] = row['value']['rev'] if doc
+          end
+        end
+      end
+    end
+
+    def push &block
+      file = Tempfile.new('app.json')
+
+      begin
+        file << { "docs" => @docs }.to_json
+        file.rewind
+        response = `curl --insecure -s -XPOST #{@url}/_bulk_docs -d@'#{file.path}' -H 'Content-Type: application/json'`
+
+        begin
+          response = JSON.parse response
+        rescue JSON::ParserError
+          block.call :error => "Can't connect to CouchDB server"
+        end
+
+        # check response
+        response.each do |resp|
+          if resp["error"]
+            block.call resp
+          end
+        end
+      ensure
+        file.close!
+      end
+    end
+  end
+
+  def self.info url, &block
+    # check server
+    info = `curl --insecure -s -XGET #{url} -H 'Content-Type:application/json'`
+    begin
+      info = JSON.parse info
+    rescue JSON::ParserError
+      block.call :error => "Can't connect to CouchDB server"
+    end
+    if info["error"]
+      if !@retry && info["error"] === "not_found" && info["reason"] === "no_db_file"
+        @retry = true
+        info = `curl --insecure -s -XPUT #{url} -H 'Content-Type:application/json'`
+        self.info url, &block
+      else
+        block.call info
+      end
+    end
+  end
+
+  def self.push json, url, batch_size = 100, &block
+    info url, &block
+
+    # dont modify json
+    json = json.dup
+
+    # push app in batches
+    json['docs'].each_slice(batch_size) do |docs|
+      app = App.new docs, url, &block
+
+      app.get_revs &block
+      app.push &block
+
+      block.call nil, { 'length' => app.length }
+    end
+  end
+end
+
+class TestBuild < Test::Unit::TestCase
+  include Mouch::Build
+
+  TEST_DIR = '.test'
+
+  def with_files files, &block
+    system "rm #{TEST_DIR} -rf && mkdir #{TEST_DIR}"
+    
+    files.each do |filename, content|
+      File.open(File.join(TEST_DIR, filename), 'w') { |f| f << content }
+    end
+
+    Dir.chdir TEST_DIR, &block
+    
+    system "rm #{TEST_DIR} -rf"
+  end
+
+  def test_h
+    assert_equal("2", h(2))
+  end
+
+  def test_base64
+    assert_equal("YSBzdHJpbmc=", base64('a string'))
+  end
+
+  def test_read
+    with_files 'myfile' => 'bla' do
+      assert_equal('bla', read('myfile'))
+    end
+  end
+
+  def test_map
+    with_files 'myfile.txt' => 'bla' do
+      assert_equal({'myfile' => 'bla'}.to_json, map('.'))
+    end
+  end
+
+  def test_attachments
+    with_files 'mystyle.css' => 'body{color:red}' do
+      assert_equal({
+        'mystyle.css' => {
+          'content_type' => 'text/css; charset=utf-8',
+          'data' => 'Ym9keXtjb2xvcjpyZWR9'
+        }
+      }.to_json, attachments('*'))
+    end
+  end
+end
+
+
+include Mouch::Build
+
+@@run_tests = false
+
+if ARGV.delete('--test')
+  # run tests
+  @@run_tests = true
+elsif ARGV.any? { |arg| arg =~ /^https{0,1}:\/\// } || ENV['COUCH_URL']
+  # push app
+  urls = ARGV.find_all { |arg| arg =~ /^https{0,1}:\/\// }
+  ARGV.delete_if { |arg| arg =~ /^https{0,1}:\/\// }
+
+  # use environment variable if present
+  urls << ENV['COUCH_URL'] if ENV['COUCH_URL']
+
+  app = []
+
+  if File.file?(ARGF.filename)
+    app << read(ARGF.filename)
+  else
+    # read from STDIN
+    app << ERB.new(ARGF.read).result(binding)
+  end
+
+  # parse app
+  @app = JSON.parse app.join
+
+  # single doc
+  if @app['_id']
+    @app = { 'docs' => [@app] }
+  end
+
+  # check app
+  if !@app['docs'] || !@app['docs'].is_a?(Array)
+    puts 'Invalid app: no docs array.'
+    return
+  end
+
+  urls.each do |url|
+    STDERR.puts '* push %s' % url
+
+    cnt = 0
+    total = @app['docs'].length
+    Mouch.push @app, url do |err, resp|
+      if err
+        STDERR.puts "An error happened:"
+        STDERR.puts '  ' + err.inspect
+      else
+        cnt += resp['length']
+
+        # progress indicator
+        if total < 10
+          STDERR.print "%d %s pushed" % [cnt, cnt === 1 ? 'doc' : 'docs']
+        else
+          STDERR.print "\r%.2f%% (%d/%d)" % [cnt * 100.0 / total, cnt, total]
+        end
+      end
+    end
+
+    STDERR.puts
+  end
+else
+  # compile to STDOUT
+  if File.file?(ARGF.filename)
+    puts read ARGF.filename
+  else
+    # read from STDIN
+    puts ERB.new(ARGF.read).result(binding)
+  end
+end
+
+# instruct the test runner to run only if desired
+class Test::Unit::Runner
+  @@stop_auto_run = !@@run_tests
+end
+
