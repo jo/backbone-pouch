@@ -62,6 +62,7 @@ Backbone.sync = (function() {
         new Pouch(url, function(e, d) {
           callback(err = e, db = d, options);
           _.each(waiting, open);
+          waiting = [];
         });
       }
     }
