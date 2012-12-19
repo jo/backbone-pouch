@@ -44,7 +44,7 @@ Backbone.sync = (function() {
   // to init pouch via Backbone.sync.pouch(url, options)
   sync.pouch = function(url, options) {
     var err, db, initialized,
-        wait = 1;
+        waiting = [];
 
     options || (options = {});
 
@@ -54,13 +54,14 @@ Backbone.sync = (function() {
           // we alreay have a pouch adapter available
           callback(err, db, options);
         } else {
-          _.delay(open, wait *= 2);
+          waiting.push(callback);
         }
       } else {
         initialized = true;
         // open pouch
         new Pouch(url, function(e, d) {
           callback(err = e, db = d, options);
+          _.each(waiting, open);
         });
       }
     }
