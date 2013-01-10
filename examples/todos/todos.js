@@ -20,7 +20,6 @@ $(function(){
     // Default attributes for the todo item.
     defaults: function() {
       return {
-        type: 'todo',
         title: "empty todo...",
         order: Todos.nextOrder(),
         done: false
@@ -57,14 +56,8 @@ $(function(){
     model: Todo,
 
     // Save all of the todo items in the `"todos-backbone"` database.
-    pouch: Backbone.sync.pouch('idb://todos-backbone', {
-      reduce: false,
-      include_docs: true,
-      view: {
-        map: function(doc) {
-          if (doc.type === 'todo') emit([doc.order, doc.title], null);
-        }
-      }
+    pouch: Backbone.sync.pouch('todos-backbone-0.0.4', {
+      include_docs: true
     }),
 
     // Filter down the list of all todo items that are finished.
