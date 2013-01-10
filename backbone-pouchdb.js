@@ -33,8 +33,8 @@ Backbone.sync = (function() {
       var opts = _.extend({}, defaults, options);
       switch (method) {
         case "read":   read(db, model, opts, callback);           break;
-        case "create": db.put(model.toJSON(), opts, callback);    break;
-        case "update": db.post(model.toJSON(), opts, callback);   break;
+        case "create": db.post(model.toJSON(), opts, callback);   break;
+        case "update": db.put(model.toJSON(), opts, callback);    break;
         case "delete": db.remove(model.toJSON(), opts, callback); break;
       }
     });
