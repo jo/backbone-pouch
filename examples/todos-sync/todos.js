@@ -8,6 +8,9 @@
 // Load the application once the DOM is ready, using `jQuery.ready`:
 $(function(){
 
+  // switch on debug messages
+  Pouch.DEBUG = true;
+
   // Todo Model
   // ----------
 
@@ -53,7 +56,7 @@ $(function(){
     model: Todo,
 
     // Save all of the todo items in the `"todos-backbone"` database.
-    pouch: Backbone.sync.pouch('idb://todos-backbone', {
+    pouch: Backbone.sync.pouch('todos-backbone-0.0.4', {
       reduce: false,
       include_docs: true,
       conflicts: true,
@@ -313,7 +316,7 @@ $(function(){
     model: Replication,
 
     // Save replications in the `"replications-backbone"` database.
-    pouch: Backbone.sync.pouch('idb://replications-backbone', {
+    pouch: Backbone.sync.pouch('replications-backbone-0.0.4', {
       reduce: false,
       include_docs: true,
       view: {
