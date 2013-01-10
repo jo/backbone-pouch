@@ -8,6 +8,9 @@
 // Load the application once the DOM is ready, using `jQuery.ready`:
 $(function(){
 
+  // switch on debug messages
+  Pouch.DEBUG = true;
+
   // Todo Model
   // ----------
 
