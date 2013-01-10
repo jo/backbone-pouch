@@ -45,13 +45,20 @@ I adapted Backbone's Todo Example to use backbone-pouchdb:
 
 ### Todo Sync Couchapp Example
 
-I also included a couchapp version of the Todo example with synchronisation support.
+I also included a synchronizable Todo example,
+which can replicate todo entries to and from CouchDB servers.
 
-You can either run it as a Couchapp with Mouch [https://github.com/jo/mouch],
-or run it locally from your filesystem.
+Install as [Couchapp](http://couchapp.org):
+
+* with the included [Mouch script](https://github.com/jo/mouch),
+* use [erica](https://github.com/benoitc/erica),
+* use the (depricated) [Python Couchapp Tool](https://github.com/couchapp/couchapp) (untested)
+
+or run it locally from your filesystem by using a CORS proxy.
+(Future versions of CouchDB will support CORS, so no proxy will be neccessary.)
 
 
-#### Run Todo Sync from Filesystem
+#### Run Todo Sync from Filesystem with CORS Proxy
 
     git clone https://github.com/daleharvey/CORS-Proxy.git
     cd CORS-Proxy
@@ -62,23 +69,15 @@ This will proxy requests to http://localhost:1234 to a local CouchDB running on 
 
 #### Install Todo Sync as a Couchapp
 
-You need the following libraries and programs installed on your system:
 
-* ruby
-* ruby-json
-* curl
-
-`cd` to the apps directory:
-
-    cd examples/todos-sync
-
-Install the Couchapp:
+##### With Mouch
 
     ./mouch app.json.erb http://localhost:5984/todos-backbone
 
-If your CouchDB is not in admin party mode, supply the credentials in the form:
+##### With Erica
 
-   ./mouch app.json.erb http://username:password@localhost:5984/todos-backbone
+    erica push http://localhost:5984/todos-backbone
 
 
-and visit [localhost:5984/todos-backbone/_design/todos/index.html](http://localhost:5984/todos-backbone/_design/todos/index.html)
+The Couchapp will be served from
+[localhost:5984/todos-backbone/_design/todos/index.html](http://localhost:5984/todos-backbone/_design/todos/index.html)
