@@ -81,4 +81,4 @@ If your CouchDB is not in admin party mode, supply the credentials in the form:
    ./mouch app.json.erb http://username:password@localhost:5984/todos-backbone
 
 
-and visit `http://localhost:5984/todos-backbone/_design/todos/index.html`
+and visit [localhost:5984/todos-backbone/_design/todos/index.html](http://localhost:5984/todos-backbone/_design/todos/index.html)

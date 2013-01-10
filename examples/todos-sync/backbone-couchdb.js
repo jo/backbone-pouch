@@ -1,1 +1,0 @@
-../../backbone-couchdb.js
