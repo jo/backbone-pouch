@@ -48,7 +48,7 @@ I adapted Backbone's Todo Example to use backbone-pouchdb:
 I also included a synchronizable Todo example,
 which can replicate todo entries to and from CouchDB servers.
 
-[Run Todo Sync Example App](http://jo.github.com/backbone-pouchdb/examples/todos-sync/_attachments)
+[Run Todo Sync Example App](http://jo.github.com/backbone-pouchdb/examples/todos-sync/app)
 
 
 *Install* as [Couchapp](http://couchapp.org):
