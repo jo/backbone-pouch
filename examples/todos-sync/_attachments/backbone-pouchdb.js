@@ -1,1 +1,1 @@
-../../../backbone-pouchdb.js
+../../../src/backbone-pouchdb.js

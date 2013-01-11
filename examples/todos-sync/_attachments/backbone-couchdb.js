@@ -1,1 +1,1 @@
-../../../backbone-couchdb.js
+../../../src/backbone-couchdb.js
