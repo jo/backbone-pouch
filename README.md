@@ -1,6 +1,6 @@
 # backbone-pouchdb
 
-A Backbone sync adapter for [http://pouchdb.com/](PouchDB).
+A Backbone sync adapter for [PouchDB](http://pouchdb.com/).
 
 
 ### Getting started
