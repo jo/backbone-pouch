@@ -1,1 +1,1 @@
-../../../vendor/pouch.alpha.js
+../../../lib/pouch.alpha.js
