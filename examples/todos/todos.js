@@ -56,7 +56,7 @@ $(function(){
     model: Todo,
 
     // Save all of the todo items in the `"todos-backbone"` database.
-    pouch: Backbone.sync.pouch('todos-backbone-0.0.4', {
+    pouch: Backbone.sync.pouch('todos-backbone-0.0.5', {
       include_docs: true
     }),
 

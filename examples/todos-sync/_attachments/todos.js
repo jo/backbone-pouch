@@ -56,7 +56,7 @@ $(function(){
     model: Todo,
 
     // Save all of the todo items in the `"todos-backbone"` database.
-    pouch: Backbone.sync.pouch('todos-backbone-0.0.4', {
+    pouch: Backbone.sync.pouch('todos-backbone-0.0.5', {
       reduce: false,
       include_docs: true,
       conflicts: true,
@@ -316,7 +316,7 @@ $(function(){
     model: Replication,
 
     // Save replications in the `"replications-backbone"` database.
-    pouch: Backbone.sync.pouch('replications-backbone-0.0.4', {
+    pouch: Backbone.sync.pouch('replications-backbone-0.0.5', {
       reduce: false,
       include_docs: true,
       view: {
