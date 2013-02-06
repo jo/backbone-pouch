@@ -1,0 +1,1 @@
+../../../lib/pouchdb-nightly.js
