@@ -190,7 +190,44 @@ $(function(){
       this.footer = this.$('footer');
       this.main = $('#main');
 
-      Todos.fetch();
+      Todos.fetch({
+        success: this.listen
+      });
+    },
+
+    listen: function listen() {
+      Todos.pouch(function(err, db) {
+        db.info(function(err, info) {
+          // get changes since info.update_seq
+          var change = db.changes({
+            since: info.update_seq,
+            continuous: true,
+            conflicts: true,
+            include_docs: true,
+            onChange: function(change) {
+              var todo = Todos.get(change.id);
+
+              if (change.doc && change.doc._deleted) {
+                if (todo) {
+                  Todos.remove(todo);
+                }
+                return;
+              }
+
+              if (todo) {
+                todo.set(change.doc);
+              } else {
+                todo = _.first(Todos.parse({ rows: [{ doc: change.doc }] }));
+                todo && Todos.add(todo);
+              }
+            },
+            error: function(e) {
+              console.error('Changes feed died');
+              console.log(e);
+            }
+          });
+        });
+      });
     },
 
     // Re-rendering the App just means refreshing the statistics -- the rest
