@@ -41,11 +41,11 @@ Backbone.Model.prototype.save = (function() {
 
     var success = options.success;
 
-    options.success = function(model, response) {
+    options.success = function(model, response, options) {
       model.set({ _rev: response._rev }, { silent: true });
 
       if (typeof success === 'function') {
-        success(model, response);
+        success(model, response, options);
       }
     };
 
