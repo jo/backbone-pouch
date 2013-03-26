@@ -25,11 +25,9 @@ Backbone.sync = (function() {
     function callback(err, resp) {
       if (err) {
         if (options.error) options.error(model, err, options);
-        model.trigger('error', model, err, options);
         return;
       }
       if (options.success) options.success(model, resp, options);
-      model.trigger('sync', model, resp, options);
     }
 
     model.trigger('request', model, pouch, options);
