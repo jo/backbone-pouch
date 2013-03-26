@@ -24,17 +24,17 @@ Backbone.sync = (function() {
 
     function callback(err, resp) {
       if (err) {
-        if (options.error) options.error(model, err, options);
+        if (options.error) options.error(resp);
         return;
       }
-      if (options.success) options.success(model, resp, options);
+      if (options.success) options.success(resp);
     }
 
     model.trigger('request', model, pouch, options);
 
     pouch(function(err, db, defaults) {
       if (err) {
-        if (options.error) options.error(model, err, options);
+        if (options.error) options.error(err);
         return;
       }
       var opts = _.extend({}, defaults, options);
