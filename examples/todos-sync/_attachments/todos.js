@@ -56,7 +56,7 @@ $(function(){
     model: Todo,
 
     // Save all of the todo items in the `"todos-backbone"` database.
-    pouch: Backbone.sync.pouch('todos-backbone-0.0.5', {
+    pouch: Backbone.sync.pouch('todos-backbone-0.0.6', {
       reduce: false,
       include_docs: true,
       conflicts: true,
@@ -213,14 +213,14 @@ $(function(){
             conflicts: true,
             include_docs: true,
             filter: function(doc) {
-              return doc.type === 'todo';
+              return doc.type === 'todo' || doc._deleted;
             },
             onChange: function(change) {
               var todo = Todos.get(change.id);
 
-              if (change.doc && change.doc._deleted) {
+              if (change.deleted) {
                 if (todo) {
-                  Todos.remove(todo);
+                  todo.destroy();
                 }
                 return;
               }
@@ -316,7 +316,7 @@ $(function(){
     model: Replication,
 
     // Save replications in the `"replications-backbone"` database.
-    pouch: Backbone.sync.pouch('replications-backbone-0.0.5', {
+    pouch: Backbone.sync.pouch('replications-backbone-0.0.6', {
       reduce: false,
       include_docs: true,
       view: {
