@@ -55,7 +55,7 @@ Backbone.sync = (function() {
 
     options || (options = {});
 
-    return function open(callback) {
+    var db = function open(callback) {
       if (initialized) {
         if (err || db) {
           // we alreay have a pouch adapter available
@@ -73,6 +73,10 @@ Backbone.sync = (function() {
         });
       }
     }
+    
+    db.url = url;
+
+    return db;
   };
 
   return sync;

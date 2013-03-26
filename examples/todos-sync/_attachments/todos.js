@@ -426,20 +426,17 @@ $(function(){
     },
 
     renderStats: function() {
-      this.stats.html(this.statsTemplate(_.reduce([this.pullResps, this.pushResps], function(memo, resps) {
-        memo.read += _.reduce(resps, function(sum, resp) {
-          return sum + resp.docs_read;
-        }, 0);
-        memo.written += _.reduce(resps, function(sum, resp) {
+      var stats = {
+        read: _.reduce(this.pullResps, function(sum, resp) {
           return sum + resp.docs_written;
-        }, 0);
-
-        return memo;
-      }, {
-        read: 0,
-        written: 0,
+        }, 0),
+        written: _.reduce(this.pushResps, function(sum, resp) {
+          return sum + resp.docs_written;
+        }, 0),
         count: Replications.length
-      })));
+      };
+
+      this.stats.html(this.statsTemplate(stats));
     },
 
     // Add a single replication item to the list by creating a view for it, and
@@ -471,13 +468,19 @@ $(function(){
           pullResps = this.pullResps,
           renderStats = _.bind(this.renderStats, this);
 
-      Todos.pouch(function(err, db) {
-        db.replicate.to(url, { continuous: true }, function(err, resp) {
+      Pouch.replicate(Todos.pouch.url, url, {
+        continuous: true,
+        onChange: function(resp) {
           pushResps[url] = resp;
-        });
-        db.replicate.from(url, { continuous: true }, function(err, resp) {
+          renderStats();
+        }
+      });
+      Pouch.replicate(url, Todos.pouch.url, {
+        continuous: true,
+        onChange: function(resp) {
           pullResps[url] = resp;
-        });
+          renderStats();
+        }
       });
     }
 
