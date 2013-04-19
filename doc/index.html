@@ -217,85 +217,270 @@
     </nav>
     <main>
       <h1>backbone-pouch</h1>
-<p>A Backbone sync adapter for <a href="http://pouchdb.com/">PouchDB</a>.</p>
-<h3>Getting started</h3>
-<p>Per model:</p>
-<pre><code>var MyModel = Backbone.Model.extend({
+<p><a href="http://backbonejs.org/">Backbone</a> <a href="http://pouchdb.com/">PouchDB</a> Sync Adapter</p>
+<h2>Getting Started</h2>
+<p>You can use backbone-pouch on the server with node or in the browser:</p>
+<h3>On the Server</h3>
+<p>Install the module with: <code>npm install backbone-pouch</code></p>
+<pre><code class="lang-javascript">var backbone = require(&#39;backbone&#39;);
+var backbone_pouch = require(&#39;backbone-pouch&#39;);
+backbone.sync = backbone_pouch.sync();</code></pre>
+<h3>In the Browser</h3>
+<ol>
+<li>Download <a href="http://code.jquery.com/jquery-2.0.0.min.js">jQuery</a>, <a href="http://underscorejs.org/underscore-min.js">Underscore</a>, <a href="http://backbonejs.org/backbone-min.js">Backbone</a> and <a href="http://download.pouchdb.com/pouchdb-nightly.min.js">PouchDB</a></li>
+<li>Download the <a href="https://raw.github.com/jo/backbone-pouch/master/dist/backbone-pouch.min.js">production version</a> or the <a href="https://raw.github.com/jo/backbone-pouch/master/dist/backbone-pouch.js">development version</a>.</li>
+<li>In your web page:</li>
+</ol>
+<pre><code class="lang-html">&lt;script src=&quot;jquery-2.0.0.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;underscore-min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;backbone-min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;pouchdb-nightly.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;backbone-pouch.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  Backbone.sync = BackbonePouch.sync();
+&lt;/script&gt;</code></pre>
+<h2>Setup backbone-pouch</h2>
+<p>You can configure Backbone to persist via backbone-pouch per model:</p>
+<pre><code class="lang-javascript">var MyModel = Backbone.Model.extend({
   sync: BackbonePouch.sync(options)
-})</code></pre>
-<p>Set BackbonePouch sync globally:</p>
-<pre><code>Backbone.sync = BackbonePouch.sync(defaults)
+});</code></pre>
+<p>Or you might want to set backbone-pouch sync globally:</p>
+<pre><code class="lang-javascript">Backbone.sync = BackbonePouch.sync(defaults);
 
 var MyModel = Backbone.Model.extend({
   pouch: options
-})</code></pre>
-<h2>Options handling:</h2>
-<ol>
-<li>BackbonePouch defaults</li>
-<li>BackbonePouch.sync defaults</li>
-<li>pouch options</li>
-<li>save / get / destroy / fetch options</li>
-</ol>
-<pre><code>// TODO: link to specific sections on pouchdb.com
-Backbone.Model.extend({
-  sync: BackbonePouch.sync(),
-  pouch: {
-    db: Pouch(&#39;dbname&#39;, {}),
-
+});</code></pre>
+<h3><code>idAttribute</code></h3>
+<p>You should adjust the <code>idAttribute</code>, because CouchDB (and therefore PouchDB)
+uses <code>_id</code> instead of the default <code>id</code> attribute:</p>
+<pre><code class="lang-javascript">Backbone.Model.prototype.idAttribute = &#39;_id&#39;;</code></pre>
+<p><p id=usage></p></p>
+<h2>Usage</h2>
+<pre><code class="lang-javascript">var MyModel = Backbone.Model.extend({
+  idAttribute: &#39;_id&#39;,
+  sync: BackbonePouch.sync({
+    db: Pouch(&#39;mydb&#39;)
+  })
+});</code></pre>
+<h3>Query documents of type <code>post</code></h3>
+<p>Retrieve single documents with all conflicts.
+Retrieve collections via Map Reduce, filtering all documents of type <code>post</code>, ordered by <code>position</code>.
+Limit results to <code>10</code>.</p>
+<pre><code class="lang-javascript">var Post = Backbone.Model.extend({
+  idAttribute: &#39;_id&#39;,
+  sync: BackbonePouch.sync({
+    db: Pouch(&#39;mydb&#39;)
+  })
+});
+var Posts = Backbone.Collection.extend({
+  model: Post,
+  sync: BackbonePouch.sync({
+    db: Pouch(&#39;mydb&#39;),
+    fetchMethod: &#39;query&#39;,
     options: {
-      // Options for document creation. Currently no options supported
-      post: {},           
-
-      // Options for document update. Currently no options supported
-      put: {}
-
-      // Options for document deletion. Currently no options supported
-      remove: {}
-
-      // Options for fetching a single document
-      get: {
-        revs: true,         // Include revision history of the document. Default is false.
-        revs_info: true,    // Include a list of revisions of the document, and their availability. Default is false.
-        open_revs: &#39;all&#39;,   // Fetch all leaf revisions if open_revs=&#39;all&#39;. Default is false.
-        conflicts: true,    // If specified conflicting leaf revisions will be attached in _conflicts array. Default is false.
-        attachments: true   // Include attachment data. Default is false.
-      },
-
-      // Type of fetch
-      fetchMethod: &#39;query&#39;, // possible values are &#39;allDocs&#39; (default), &#39;query&#39;, &#39;spatial&#39;
-      // allDocs options
-      allDocs: {},
-      // spatial options
-      spatial: {},
-      // Query options
       query: {
         fun: {
-          map: function(doc) { emit(doc._id, null) },                     // Map function
-          reduce: function(keys, values, rereduce) { return keys.length } // Optional reduce function
+          map: function(doc) {
+            if (doc.type === &#39;post&#39;) {
+              emit(doc.position, null)
+            }
+          }
         },
-        // fun: &#39;mydoc/myview&#39;, // Can be a named view in design document
-        include_docs: true,     // Default is true.
-        reduce: false,          // Default is true if there is a reduce function
-        include_docs: true,     // Default is true
-        limit: 10,              // Default is undefined
-        descending: false,      // Default is undefined
-        startkey: &#39;aaa&#39;,        // Default is undefined
-        endkey: &#39;zzz&#39;,          // Default is undefined
-        // key: &#39;abc&#39;,          // Default is undefined
-        // keys: [&#39;abc&#39;, &#39;def&#39;] // Default is undefined
+        limit: 10
+      },
+      changes: {
+        filter: function(doc) {
+          return doc._deleted || doc.type === &#39;post&#39;;
+        }
+      }
+    }
+  })
+});</code></pre>
+<h3>Global Backbone Sync Configuration</h3>
+<p>Use <code>mydb</code> as default for all databases.
+Setup Map Reduce as default query method.
+Limit resultset to <code>10</code>.
+Authors are returnd by <code>name</code>, Posts by <code>date</code>.</p>
+<pre><code class="lang-javascript">Backbone.sync =  BackbonePouch.sync({
+  db: Pouch(&#39;mydb&#39;),
+  fetchMethod: &#39;query&#39;,
+  query: {
+    limit: 10
+  }
+});
+Backbone.Model.prototype.idAttribute = &#39;_id&#39;;</code></pre>
+<p>Then you can define your models and collections as usual
+and overwrite backbone-pouchdb settings via the <code>pouch</code> property:</p>
+<pre><code class="lang-javascript">var Author = Backbone.Model.extend();
+var Authors = Backbone.Collection.extend({
+  model: Author,
+  pouch: {
+    query: {
+      fun: {
+        map: function(doc) {
+          if (doc.type === &#39;author&#39;) {
+            emit(doc.name, null)
+          }
+        }
+      }
+    },
+    changes: {
+      filter: function(doc) {
+        return doc._deleted || doc.type === &#39;author&#39;;
+      }
+    }
+  }
+});
+var Post = Backbone.Model.extend();
+var Posts = Backbone.Collection.extend({
+  model: Post,
+  pouch: {
+    query: {
+      fun: {
+        map: function(doc) {
+          if (doc.type === &#39;post&#39;) {
+            emit(doc.date, null)
+          }
+        }
+      }
+    },
+    changes: {
+      filter: function(doc) {
+        return doc._deleted || doc.type === &#39;post&#39;;
       }
     }
   }
 });</code></pre>
-<p>You can also set backbone-pouch globally:</p>
-<pre><code>Backbone.sync = BackbonePouch.sync</code></pre>
+<p><p id=configuration></p></p>
+<h2>Configuration</h2>
+<p>You can configure every option passed to PouchDB.</p>
+<h3>Option Inheritance</h3>
+<p>Options are merged (using Underscores <a href="http://underscorejs.org/#extend">extend</a>) in the following order:</p>
+<ol>
+<li>BackbonePouch defaults</li>
+<li>BackbonePouch sync options</li>
+<li>pouch object</li>
+<li>save / get / destroy / fetch options</li>
+</ol>
+<h3>backbone-pouch Options</h3>
+<p>These options control the behaviour of backbone-pouch.</p>
+<h4><code>db</code>: Pouch Adapter</h4>
+<p>Setup a database. This option is mendatory. Must be a Pouch adapter:</p>
+<pre><code class="lang-javascript">Pouch(&#39;dbname&#39;)</code></pre>
+<p>See <a href="http://pouchdb.com/api.html#create_a_database">Create a database</a>.</p>
+<h4><code>fetch</code>: Fetch Method</h4>
+<p>Specify the fetch method. Can be either <code>allDocs</code> (default), <code>query</code> or <code>spatial</code>.</p>
+<p>Use the default <code>allDocs</code> if you want all documents.</p>
+<p>Using <code>query</code> you can use Map-Reduce to query the database.</p>
+<p><code>spatial</code> requires the Spatial query plugin.</p>
+<h4><code>listen</code>: Listen for Changes</h4>
+<p>When this is checked, backbone-pouchdb will listen for changes in the database
+and update the model / collection on every change.
+Default is true.</p>
+<p><em>Note that you will need to setup a <code>filter</code> function when used in combination with <code>query</code> fetch method.</em></p>
+<h4><code>options</code>: PouchDB Options</h4>
+<p>Those options are passed directly to PouchDB.</p>
+<p>The keys are PouchDB methods. Possible keys are <code>post</code>, <code>put</code>, <code>remove</code>, <code>get</code>, <code>query</code>, <code>allDocs</code> and <code>spatial</code>.</p>
 <p>Refer to the <a href="http://pouchdb.com/api.html">PouchDB API Documentation</a> for more options.</p>
-<h3>Examples</h3>
-<p>I adapted Backbone&#39;s Todo Example to use backbone-pouch:</p>
-<p><a href="http://jo.github.com/backbone-pouch/examples/todos">Simple Todo App</a></p>
-<p>I also included a synchronizable Todo example,
-which can replicate todo entries to and from CouchDB servers:</p>
-<p><a href="http://jo.github.com/backbone-pouch/examples/todos-sync/_attachments">Syncing Todo App</a></p>
+<h5><code>post</code>: Create</h5>
+<p>Options for document creation. Currently no options supported.</p>
+<p>See <a href="http://pouchdb.com/api.html#create_a_document">Create a Document</a>.</p>
+<h5><code>put</code>: Update</h5>
+<p>Options for document update. Currently no options supported.</p>
+<p>See <a href="http://pouchdb.com/api.html#update_a_document">Update a Document</a>.</p>
+<h5><code>remove</code>: Delete</h5>
+<p>Options for document delete. Currently no options supported.</p>
+<p>See <a href="http://pouchdb.com/api.html#delete_a_document">Delete a Document</a>.</p>
+<h5><code>get</code>: Retrieve Model</h5>
+<p>Options for fetching a single document.</p>
+<ul>
+<li><code>attachments</code>: Include attachment data.</li>
+<li><code>conflicts</code>: If specified conflicting leaf revisions will be attached in _conflicts array.</li>
+<li><code>open_revs</code>: Fetch all leaf revisions if open_revs=&#39;all&#39;.</li>
+<li><code>rev</code>: Fetch specific revision of a document. Defaults to winning revision.</li>
+<li><code>revs_info</code>: Include a list of revisions of the document, and their availability.</li>
+<li><code>revs</code>: Include revision history of the document.</li>
+</ul>
+<p>See <a href="http://pouchdb.com/api.html#fetch_a_document">Fetch a Document</a>.</p>
+<h5><code>allDocs</code>: Retrieve Collection</h5>
+<p>Options for fetching all documents.</p>
+<ul>
+<li><code>attachments</code>: Include attachment data.</li>
+<li><code>conflicts</code>: If specified conflicting leaf revisions will be attached in _conflicts array.</li>
+<li><code>descending</code>: Return result in descending order. Default is ascending order.</li>
+<li><code>endkey</code>: Endkey of the query.</li>
+<li><code>include_docs</code>: Whether to include the document in <code>doc</code> property. Default is true.</li>
+<li><code>key</code>: Key of the query.</li>
+<li><code>keys</code>: Multiple keys.</li>
+<li><code>limit</code>: Limit the resultset. Default is to return all documents.</li>
+<li><code>startkey</code>: Startkey of the query.</li>
+</ul>
+<p>See <a href="http://pouchdb.com/api.html#fetch_documents">Fetch Documents</a>.</p>
+<h5><code>query</code>: Retrieve Collection via Map Reduce</h5>
+<p>Query options for Map Reduce queries.</p>
+<ul>
+<li><code>attachments</code>: Include attachment data.</li>
+<li><code>conflicts</code>: If specified conflicting leaf revisions will be attached in _conflicts array.</li>
+<li><code>descending</code>: Return result in descending order. Default is ascending order.</li>
+<li><code>endkey</code>: Endkey of the query.</li>
+<li><code>fun</code>: Map Reduce Function: can be a string addressing a view in a design document or an object with a <code>map</code> and optional <code>reduce</code> property. A map function is <em>required</em>, if you use the query fetch method.</li>
+<li><code>include_docs</code>: Whether to include the document in <code>doc</code> property. Default is true.</li>
+<li><code>key</code>: Key of the query.</li>
+<li><code>keys</code>: Multiple keys.</li>
+<li><code>limit</code>: Limit the resultset. Default is to return all documents.</li>
+<li><code>reduce</code>: Whether to include the document in <code>doc</code> property. Default is to reduce if there is a reduce function.</li>
+<li><code>startkey</code>: Startkey of the query.</li>
+</ul>
+<p>See <a href="http://pouchdb.com/api.html#query_the_database">Query the Database</a>.</p>
+<h5><code>spatial</code>: Retrieve Collection via Spatial Index</h5>
+<p>Options for Spatial query. The spatial query has not been tested.
+You have to use a PouchDB build with included <a href="https://github.com/daleharvey/pouchdb/blob/master/src/plugins/pouchdb.spatial.js">Spatial</a> plugin.</p>
+<ul>
+<li><code>conflicts</code>: If specified conflicting leaf revisions will be attached in _conflicts array.</li>
+<li><code>end_range</code>: End range of query</li>
+<li><code>include_docs</code>: Whether to include the document on each change. Default is true.</li>
+<li><code>start_range</code>: Start range of query</li>
+</ul>
+<h5><code>changes</code>: Listen for changes</h5>
+<p>Options passed to changes feed.</p>
+<ul>
+<li><code>filter</code>: Reference a filter function from a design document or define a function to selectively get updates.</li>
+<li><code>descending</code>: Return result in descending order. Default is ascending order.</li>
+<li><code>conflicts</code>: If specified conflicting leaf revisions will be attached in _conflicts array.</li>
+<li><code>continuous</code>: Continuously listen to changes. Default is true.</li>
+<li><code>include_docs</code>: Whether to include the document on each change. Default is true.</li>
+</ul>
+<p>See <a href="http://pouchdb.com/api.html#listen_to_database_changes">Listen to Database Changes</a>.</p>
+<p><p id=examples></p></p>
+<h2>Examples</h2>
+<p>Check out the <a href="http://jo.github.io/backbone-pouch/examples/todos">TODO Application</a>
+in the <code>doc/examples</code> folder.</p>
+<p>It`s the standard <a href="http://backbonejs.org/examples/todos/index.html">Backbone TODO example</a>,
+extended to use backbone-pouch.</p>
+<h3>Advanced TODO Sync Example</h3>
+<p><a href="http://jo.github.io/backbone-pouch/examples/todos-sync">TODO Sync Application</a>
+is also in the <code>doc/examples</code> folder.</p>
+<p>You can setup external CouchDB (with <a href="http://wiki.apache.org/couchdb/CORS">CORS</a> enabled)
+to sync your local TODO database.</p>
+<h2>Contributing</h2>
+<p>backbone-pouch is written with <a href="https://github.com/felixge/node-style-guide">Felix Geisendörfers Node.js Style Guide</a> in mind.</p>
+<p>Add <a href="https://github.com/caolan/nodeunit">nodeunit</a> tests for any new or changed functionality.
+Lint and test your code using <a href="http://gruntjs.com/">Grunt</a>.</p>
+<p><em>Also, please don&#39;t edit files in the &quot;dist&quot; subdirectory as they are generated via Grunt.
+You&#39;ll find source code in the &quot;lib&quot; subdirectory!</em></p>
+<p><em>The files in the &quot;doc&quot; subdirectory are generated via Grunt, too.
+Edit this README.md and template.jst and run <code>grunt doc</code> to generate the documentation.</em></p>
+<h2>Versioning</h2>
+<p>backbone-pouch follows <a href="http://semver-ftw.org/">semver-ftw</a>.
+Dont think 1.0.0 means production ready yet.
+There were some breaking changes, so had to move up the major version.</p>
+<h2>Release History</h2>
+<ul>
+<li><code>1.0.0</code>: New chained api, Node support, tests. Support listen to changes feed. Use Grunt.</li>
+<li><code>before 1.0</code>: Experimental version with example TODO apps</li>
+</ul>
+<h2>License</h2>
+<p>Copyright (c) 2013 Johannes J. Schmidt<br>Licensed under the MIT license.</p>
 
     </main>
   </body>
