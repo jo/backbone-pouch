@@ -8,8 +8,18 @@
 // Load the application once the DOM is ready, using `jQuery.ready`:
 $(function(){
 
-  // switch on debug messages
-  Pouch.DEBUG = true;
+  // Enable PouchDB debugging
+  // Pouch.DEBUG = true;
+
+  // Save all of the todo items in the `"todos-backbone"` database.
+  Backbone.sync = BackbonePouch.sync({
+    // We currently suffix by the PouchDB version here
+    // because at the moment PouchDB does not support upgrade
+    db: Pouch('todos-backbone-0.0.12')
+  });
+
+  // Adjust id attribute to the one PouchDB uses
+  Backbone.Model.prototype.idAttribute = '_id';
 
   // Todo Model
   // ----------
@@ -55,10 +65,19 @@ $(function(){
     // Reference to this collection's model.
     model: Todo,
 
-    // Save all of the todo items in the `"todos-backbone"` database.
-    pouch: Backbone.sync.pouch('todos-backbone-0.0.6', {
-      include_docs: true
-    }),
+    // Include docs in Map Reduce response. Order by `order`.
+    pouch: {
+      fetch: 'query',
+      options: {
+        query: {
+          fun: {
+            map: function(doc) {
+              emit(doc.order, null);
+            }
+          }
+        }
+      }
+    },
 
     // Filter down the list of all todo items that are finished.
     done: function() {
@@ -190,44 +209,7 @@ $(function(){
       this.footer = this.$('footer');
       this.main = $('#main');
 
-      Todos.fetch({
-        success: this.listen
-      });
-    },
-
-    listen: function listen() {
-      Todos.pouch(function(err, db) {
-        db.info(function(err, info) {
-          // get changes since info.update_seq
-          var change = db.changes({
-            since: info.update_seq,
-            continuous: true,
-            conflicts: true,
-            include_docs: true,
-            onChange: function(change) {
-              var todo = Todos.get(change.id);
-
-              if (change.deleted) {
-                if (todo) {
-                  todo.destroy();
-                }
-                return;
-              }
-
-              if (todo) {
-                todo.set(change.doc);
-              } else {
-                todo = _.first(Todos.parse({ rows: [{ doc: change.doc }] }));
-                todo && Todos.add(todo);
-              }
-            },
-            error: function(e) {
-              console.error('Changes feed died');
-              console.log(e);
-            }
-          });
-        });
-      });
+      Todos.fetch();
     },
 
     // Re-rendering the App just means refreshing the statistics -- the rest

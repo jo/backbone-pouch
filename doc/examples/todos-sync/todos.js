@@ -7,9 +7,18 @@
 
 // Load the application once the DOM is ready, using `jQuery.ready`:
 $(function(){
+  var dbname = 'todos-sync-backbone-0.0.12';
 
-  // switch on debug messages
-  Pouch.DEBUG = true;
+  // Save all of the todo items in the `"todos-backbone"` database.
+  Backbone.sync = BackbonePouch.sync({
+    // We currently suffix by the PouchDB version here
+    // because at the moment PouchDB does not support upgrade
+    db: Pouch(dbname),
+    fetch: 'query'
+  });
+
+  // Adjust id attribute to the one PouchDB uses
+  Backbone.Model.prototype.idAttribute = '_id';
 
   // Todo Model
   // ----------
@@ -55,17 +64,25 @@ $(function(){
     // Reference to this collection's model.
     model: Todo,
 
-    // Save all of the todo items in the `"todos-backbone"` database.
-    pouch: Backbone.sync.pouch('todos-backbone-0.0.6', {
-      reduce: false,
-      include_docs: true,
-      conflicts: true,
-      view: {
-        map: function(doc) {
-          if (doc.type === 'todo') emit([doc.order, doc.title], null);
+    // Include todos in Map Reduce response. Order by `order`.
+    pouch: {
+      options: {
+        query: {
+          fun: {
+            map: function(doc) {
+              if (doc.type === 'todo') {
+                emit(doc.order, null);
+              }
+            }
+          }
+        },
+        changes: {
+          filter: function(doc) {
+            return doc._deleted || doc.type === 'todo';
+          }
         }
       }
-    }),
+    },
 
     // Filter down the list of all todo items that are finished.
     done: function() {
@@ -198,47 +215,7 @@ $(function(){
       this.stats = this.$('#stats');
       this.main = $('#main');
 
-      Todos.fetch({
-        success: this.listen
-      });
-    },
-
-    listen: function listen() {
-      Todos.pouch(function(err, db) {
-        db.info(function(err, info) {
-          // get changes since info.update_seq
-          var change = db.changes({
-            since: info.update_seq,
-            continuous: true,
-            conflicts: true,
-            include_docs: true,
-            filter: function(doc) {
-              return doc.type === 'todo' || doc._deleted;
-            },
-            onChange: function(change) {
-              var todo = Todos.get(change.id);
-
-              if (change.deleted) {
-                if (todo) {
-                  todo.destroy();
-                }
-                return;
-              }
-
-              if (todo) {
-                todo.set(change.doc);
-              } else {
-                todo = _.first(Todos.parse({ rows: [{ doc: change.doc }] }));
-                todo && Todos.add(todo);
-              }
-            },
-            error: function(e) {
-              console.error('Changes feed died');
-              console.log(e);
-            }
-          });
-        });
-      });
+      Todos.fetch();
     },
 
     // Re-rendering the App just means refreshing the statistics -- the rest
@@ -315,16 +292,25 @@ $(function(){
     // Reference to this collection's model.
     model: Replication,
 
-    // Save replications in the `"replications-backbone"` database.
-    pouch: Backbone.sync.pouch('replications-backbone-0.0.6', {
-      reduce: false,
-      include_docs: true,
-      view: {
-        map: function(doc) {
-          if (doc.type === 'replication') emit([doc.url], null);
+    // Include replications in Map Reduce response. Order by `url`.
+    pouch: {
+      options: {
+        query: {
+          fun: {
+            map: function(doc) {
+              if (doc.type === 'replication') {
+                emit(doc.url, null);
+              }
+            }
+          }
+        },
+        changes: {
+          filter: function(doc) {
+            return doc._deleted || doc.type === 'replication';
+          }
         }
       }
-    }),
+    },
 
     // Replications are sorted by url.
     comparator: function(replication) {
@@ -468,14 +454,14 @@ $(function(){
           pullResps = this.pullResps,
           renderStats = _.bind(this.renderStats, this);
 
-      Pouch.replicate(Todos.pouch.url, url, {
+      Pouch.replicate(dbname, url, {
         continuous: true,
         onChange: function(resp) {
           pushResps[url] = resp;
           renderStats();
         }
       });
-      Pouch.replicate(url, Todos.pouch.url, {
+      Pouch.replicate(url, dbname, {
         continuous: true,
         onChange: function(resp) {
           pullResps[url] = resp;

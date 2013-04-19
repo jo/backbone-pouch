@@ -1,86 +1,105 @@
-# backbone-pouchdb
+# backbone-pouch
 
 A Backbone sync adapter for [PouchDB](http://pouchdb.com/).
 
 
 ### Getting started
 
-Basically, you just define a `pouch` property on your model or collection:
+Per model:
 
+    var MyModel = Backbone.Model.extend({
+      sync: BackbonePouch.sync(options)
+    })
+
+    
+Set BackbonePouch sync globally:
+
+    Backbone.sync = BackbonePouch.sync(defaults)
+
+    var MyModel = Backbone.Model.extend({
+      pouch: options
+    })
+
+
+## Options handling:
+
+1. BackbonePouch defaults
+2. BackbonePouch.sync defaults
+3. pouch options
+4. save / get / destroy / fetch options
+    
+
+    // TODO: link to specific sections on pouchdb.com
     Backbone.Model.extend({
-      pouch: Backbone.sync.pouch('mydb')
-    });
+      sync: BackbonePouch.sync(),
+      pouch: {
+        db: Pouch('dbname', {}),
 
-`Backbone.sync.pouch` acceps an `options` object as second parameter,
-where you can define options which are passed to PouchDB.
-For example, you can instruct PouchDB to include the document on view responses:
+        options: {
+          // Options for document creation. Currently no options supported
+          post: {},           
 
-    pouch: Backbone.sync.pouch('todos-backbone', {
-      include_docs: true
-    });
+          // Options for document update. Currently no options supported
+          put: {}
 
+          // Options for document deletion. Currently no options supported
+          remove: {}
 
-You can ask backbone-pouchdb to fetch a collection via a view:
+          // Options for fetching a single document
+          get: {
+            revs: true,         // Include revision history of the document. Default is false.
+            revs_info: true,    // Include a list of revisions of the document, and their availability. Default is false.
+            open_revs: 'all',   // Fetch all leaf revisions if open_revs='all'. Default is false.
+            conflicts: true,    // If specified conflicting leaf revisions will be attached in _conflicts array. Default is false.
+            attachments: true   // Include attachment data. Default is false.
+          },
 
-    pouch: Backbone.sync.pouch('todos-backbone', {
-      reduce: false,
-      include_docs: true,
-      conflicts: true,
-      view: {
-        map: function(doc) {
-          if (doc.type === 'todo') emit([doc.order, doc.title], null);
+          // Type of fetch
+          fetchMethod: 'query', // possible values are 'allDocs' (default), 'query', 'spatial'
+          // allDocs options
+          allDocs: {},
+          // spatial options
+          spatial: {},
+          // Query options
+          query: {
+            fun: {
+              map: function(doc) { emit(doc._id, null) },                     // Map function
+              reduce: function(keys, values, rereduce) { return keys.length } // Optional reduce function
+            },
+            // fun: 'mydoc/myview', // Can be a named view in design document
+            include_docs: true,     // Default is true.
+            reduce: false,          // Default is true if there is a reduce function
+            include_docs: true,     // Default is true
+            limit: 10,              // Default is undefined
+            descending: false,      // Default is undefined
+            startkey: 'aaa',        // Default is undefined
+            endkey: 'zzz',          // Default is undefined
+            // key: 'abc',          // Default is undefined
+            // keys: ['abc', 'def'] // Default is undefined
+          }
         }
       }
     });
 
 
+You can also set backbone-pouch globally:
+
+    Backbone.sync = BackbonePouch.sync
+
+
 Refer to the [PouchDB API Documentation](http://pouchdb.com/api.html) for more options.
 
 
-### Todo Example
+### Examples
 
-I adapted Backbone's Todo Example to use backbone-pouchdb:
-[Run Todo Example App](http://jo.github.com/backbone-pouchdb/examples/todos)
+I adapted Backbone's Todo Example to use backbone-pouch:
 
+[Simple Todo App](http://jo.github.com/backbone-pouch/examples/todos)
 
-### Todo Sync Couchapp Example
 
 I also included a synchronizable Todo example,
-which can replicate todo entries to and from CouchDB servers.
+which can replicate todo entries to and from CouchDB servers:
 
-[Run Todo Sync Example App](http://jo.github.com/backbone-pouchdb/examples/todos-sync/_attachments)
-
-
-*Install* as [Couchapp](http://couchapp.org):
-
-* with the included [Mouch script](https://github.com/jo/mouch),
-* use [erica](https://github.com/benoitc/erica),
-* use the (depricated) [Python Couchapp Tool](https://github.com/couchapp/couchapp) (untested)
-
-or run it locally from your filesystem by using a CORS proxy.
-(Future versions of CouchDB will support CORS, so no proxy will be neccessary.)
+[Syncing Todo App](http://jo.github.com/backbone-pouch/examples/todos-sync/_attachments)
 
 
-#### Run Todo Sync from Filesystem with CORS Proxy
-
-    git clone https://github.com/daleharvey/CORS-Proxy.git
-    cd CORS-Proxy
-    node server.js
-
-This will proxy requests to http://localhost:1234 to a local CouchDB running on http://localhost:5984, adding CORS headers.
-
-
-#### Install Todo Sync as a Couchapp
-
-
-##### With Mouch
-
-    ./mouch app.json.erb http://localhost:5984/todos-backbone
-
-##### With Erica
-
-    erica push http://localhost:5984/todos-backbone
-
-
-The Couchapp will be served from
-[localhost:5984/todos-backbone/_design/todos/index.html](http://localhost:5984/todos-backbone/_design/todos/index.html)
