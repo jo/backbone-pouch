@@ -1,4 +1,4 @@
-# backbone-pouch
+# backbone-pouch [![Build Status](https://secure.travis-ci.org/jo/backbone-pouch.png?branch=master)](http://travis-ci.org/jo/backbone-pouch)
 [Backbone](http://backbonejs.org/) [PouchDB](http://pouchdb.com/) Sync Adapter
 
 
