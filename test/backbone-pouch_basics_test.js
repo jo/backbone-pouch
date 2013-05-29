@@ -39,3 +39,15 @@ exports.sync = {
     test.done();
   }
 };
+
+exports.attachments = {
+  api: function(test) {
+    test.expect(5);
+    test.equal(typeof backbone_pouch.attachments, 'function', 'should be a function.');
+    test.equal(typeof backbone_pouch.attachments(), 'object', 'should return an object.');
+    test.equal(typeof backbone_pouch.attachments().attachments, 'function', 'should be a function.');
+    test.equal(typeof backbone_pouch.attachments().attachment, 'function', 'should be a function.');
+    test.equal(typeof backbone_pouch.attachments().attach, 'function', 'should be a function.');
+    test.done();
+  }
+};

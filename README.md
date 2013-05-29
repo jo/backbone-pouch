@@ -57,6 +57,29 @@ var MyModel = Backbone.Model.extend({
 });
 ```
 
+### `BackbonePouch.attachments()`
+You can mixin attachment support into a single model:
+
+```javascript
+var MyModel = Backbone.Model.extend(BackbonePouch.attachments());
+```
+
+Or you may want to mixin attachment support globally:
+
+```javascript
+_.extend(Backbone.Model.prototype, BackbonePouch.attachments());
+```
+
+Note that you have to call the attachments function - don't forget the braces.
+
+You can also pass the Pouch adapter to `BackbonePouch.attachments`:
+
+```javascript
+_.extend(Backbone.Model.prototype, BackbonePouch.attachments({
+  db: Pouch('mydb')
+}));
+```
+
 ### `idAttribute`
 You should adjust the `idAttribute`, because CouchDB (and therefore PouchDB)
 uses `_id` instead of the default `id` attribute:
@@ -178,6 +201,50 @@ var Posts = Backbone.Collection.extend({
 });
 ```
 
+### Attachments
+```javascript
+Backbone.sync =  BackbonePouch.sync({
+  db: Pouch('mydb')
+});
+Backbone.Model.prototype.idAttribute = '_id';
+var MyModel = Backbone.Model.extend(BackbonePouch.attachments());
+var model = new MyModel();
+model.attach(blob);     // store file
+model.attachments();    // list files
+model.attachment(name); // retrieve file
+```
+
+backbone-pouch helps you with binary attachments by providing convenient methods
+for retrieving, storing and listing files.
+
+#### `attach(blob, name, type, callback)`
+Store an attachment.
+
+`blob` must be a `Blob` in the browser or a `Buffer` in node.
+You can omit `name` if the blob has a `filename` property.
+You can omit `type` if the blob has a `type` property.
+
+The callback is invoked with `err` and `result` callbacks.
+After the file is stored, the models `_rev` property is updated.
+If the model wasn't saved before, an `id` will be assigned and it will be created.
+
+#### `attachments(filter)`
+List attachment names.
+
+The optional `filter` argument can be used to list only attachments of a certain type.
+
+If the `filter` argument is a string or a RegExp,
+it will be matched against the `content_type` of each attachment
+and only the matching attachment names will be returned.
+
+If `filter` is a function, it will be called with the attachments name and its stub.
+
+#### `attachment(name, callback)`
+Retrieve an attachment blob by name.
+
+`callback` is called with `error` and `blob` arguments.
+
+In the browser a `Blob` object is returned, a `Buffer` in node.
 
 <p id=configuration></p>
 ## Configuration
@@ -342,8 +409,9 @@ There were some breaking changes, so had to move up the major version.
 
 ## Release History
 
-* `1.0.0`: New chained api, Node support, tests. Support listen to changes feed. Use Grunt.
-* `before 1.0`: Experimental version with example TODO apps
+* `1.1`: Attachment support
+* `1.0`: New chained api, Node support, tests. Support listen to changes feed. Use Grunt.
+* `< 1.0`: Experimental version with example TODO apps
 
 ## License
 Copyright (c) 2013 Johannes J. Schmidt  

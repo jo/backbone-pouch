@@ -252,6 +252,16 @@ backbone.sync = backbone_pouch.sync();</code></pre>
 var MyModel = Backbone.Model.extend({
   pouch: options
 });</code></pre>
+<h3><code>BackbonePouch.attachments()</code></h3>
+<p>You can mixin attachment support into a single model:</p>
+<pre><code class="lang-javascript">var MyModel = Backbone.Model.extend(BackbonePouch.attachments());</code></pre>
+<p>Or you may want to mixin attachment support globally:</p>
+<pre><code class="lang-javascript">_.extend(Backbone.Model.prototype, BackbonePouch.attachments());</code></pre>
+<p>Note that you have to call the attachments function - don&#39;t forget the braces.</p>
+<p>You can also pass the Pouch adapter to <code>BackbonePouch.attachments</code>:</p>
+<pre><code class="lang-javascript">_.extend(Backbone.Model.prototype, BackbonePouch.attachments({
+  db: Pouch(&#39;mydb&#39;)
+}));</code></pre>
 <h3><code>idAttribute</code></h3>
 <p>You should adjust the <code>idAttribute</code>, because CouchDB (and therefore PouchDB)
 uses <code>_id</code> instead of the default <code>id</code> attribute:</p>
@@ -353,6 +363,37 @@ var Posts = Backbone.Collection.extend({
     }
   }
 });</code></pre>
+<h3>Attachments</h3>
+<pre><code class="lang-javascript">Backbone.sync =  BackbonePouch.sync({
+  db: Pouch(&#39;mydb&#39;)
+});
+Backbone.Model.prototype.idAttribute = &#39;_id&#39;;
+var MyModel = Backbone.Model.extend(BackbonePouch.attachments());
+var model = new MyModel();
+model.attach(blob);     // store file
+model.attachments();    // list files
+model.attachment(name); // retrieve file</code></pre>
+<p>backbone-pouch helps you with binary attachments by providing convenient methods
+for retrieving, storing and listing files.</p>
+<h4><code>attach(blob, name, type, callback)</code></h4>
+<p>Store an attachment.</p>
+<p><code>blob</code> must be a <code>Blob</code> in the browser or a <code>Buffer</code> in node.
+You can omit <code>name</code> if the blob has a <code>filename</code> property.
+You can omit <code>type</code> if the blob has a <code>type</code> property.</p>
+<p>The callback is invoked with <code>err</code> and <code>result</code> callbacks.
+After the file is stored, the models <code>_rev</code> property is updated.
+If the model wasn&#39;t saved before, an <code>id</code> will be assigned and it will be created.</p>
+<h4><code>attachments(filter)</code></h4>
+<p>List attachment names.</p>
+<p>The optional <code>filter</code> argument can be used to list only attachments of a certain type.</p>
+<p>If the <code>filter</code> argument is a string or a RegExp,
+it will be matched against the <code>content_type</code> of each attachment
+and only the matching attachment names will be returned.</p>
+<p>If <code>filter</code> is a function, it will be called with the attachments name and its stub.</p>
+<h4><code>attachment(name, callback)</code></h4>
+<p>Retrieve an attachment blob by name.</p>
+<p><code>callback</code> is called with <code>error</code> and <code>blob</code> arguments.</p>
+<p>In the browser a <code>Blob</code> object is returned, a <code>Buffer</code> in node.</p>
 <p><p id=configuration></p></p>
 <h2>Configuration</h2>
 <p>You can configure every option passed to PouchDB.</p>
@@ -478,8 +519,9 @@ Dont think 1.0.0 means production ready yet.
 There were some breaking changes, so had to move up the major version.</p>
 <h2>Release History</h2>
 <ul>
-<li><code>1.0.0</code>: New chained api, Node support, tests. Support listen to changes feed. Use Grunt.</li>
-<li><code>before 1.0</code>: Experimental version with example TODO apps</li>
+<li><code>1.1</code>: Attachment support</li>
+<li><code>1.0</code>: New chained api, Node support, tests. Support listen to changes feed. Use Grunt.</li>
+<li><code>&lt; 1.0</code>: Experimental version with example TODO apps</li>
 </ul>
 <h2>License</h2>
 <p>Copyright (c) 2013 Johannes J. Schmidt<br>Licensed under the MIT license.</p>

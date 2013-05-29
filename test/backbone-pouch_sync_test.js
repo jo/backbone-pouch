@@ -27,12 +27,16 @@ var backbone_pouch = require('../lib/backbone-pouch.js');
 backbone.sync = backbone_pouch.sync({
   db: pouch('_test_db')
 });
+
 exports.sync = {
-  create: function(test) {
-    var Model = backbone.Model.extend({
+  setUp: function(done) {
+    this.Model = backbone.Model.extend({
       idAttribute: '_id'
     });
-    var model = new Model();
+    done();
+  },
+  create: function(test) {
+    var model = new this.Model();
     test.expect(3);
     model.save({}, {
       success: function(model) {
@@ -44,7 +48,7 @@ exports.sync = {
     });
   },
   update: function(test) {
-    var model = new backbone.Model({ foo: 'bar' });
+    var model = new this.Model({ foo: 'bar' });
     test.expect(2);
     model.save({}, {
       success: function(model) {
@@ -60,7 +64,7 @@ exports.sync = {
     });
   },
   remove: function(test) {
-    var model = new backbone.Model({ foo: 'bar' });
+    var model = new this.Model({ foo: 'bar' });
     test.expect(1);
     model.on('destroy', function() {
       test.ok(true, 'should have received destroy event');
@@ -75,11 +79,8 @@ exports.sync = {
     });
   },
   allDocs: function(test) {
-    var Model = backbone.Model.extend({
-      idAttribute: '_id'
-    });
     var Collection = backbone.Collection.extend({
-      model: Model
+      model: this.Model
     });
     var collection = new Collection();
     var model = new collection.model();
@@ -101,11 +102,8 @@ exports.sync = {
     });
   },
   query: function(test) {
-    var Model = backbone.Model.extend({
-      idAttribute: '_id'
-    });
     var Collection = backbone.Collection.extend({
-      model: Model,
+      model: this.Model,
       pouch: {
         fetch: 'query',
         options: {
