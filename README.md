@@ -411,7 +411,7 @@ There were some breaking changes, so had to move up the major version.
 
 * `1.1`: Attachment support
 * `1.0`: New chained api, Node support, tests. Support listen to changes feed. Use Grunt.
-* `< 1.0`: Experimental version with example TODO apps
+* `prior 1.0`: Experimental version with example TODO apps
 
 ## License
 Copyright (c) 2013 Johannes J. Schmidt  
