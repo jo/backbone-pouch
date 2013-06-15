@@ -288,7 +288,7 @@ var Posts = Backbone.Collection.extend({
   model: Post,
   sync: BackbonePouch.sync({
     db: Pouch(&#39;mydb&#39;),
-    fetchMethod: &#39;query&#39;,
+    fetch: &#39;query&#39;,
     options: {
       query: {
         fun: {
@@ -315,7 +315,7 @@ Limit resultset to <code>10</code>.
 Authors are returnd by <code>name</code>, Posts by <code>date</code>.</p>
 <pre><code class="lang-javascript">Backbone.sync =  BackbonePouch.sync({
   db: Pouch(&#39;mydb&#39;),
-  fetchMethod: &#39;query&#39;,
+  fetch: &#39;query&#39;,
   query: {
     limit: 10
   }
@@ -521,7 +521,7 @@ There were some breaking changes, so had to move up the major version.</p>
 <ul>
 <li><code>1.1</code>: Attachment support</li>
 <li><code>1.0</code>: New chained api, Node support, tests. Support listen to changes feed. Use Grunt.</li>
-<li><code>&lt; 1.0</code>: Experimental version with example TODO apps</li>
+<li><code>prior 1.0</code>: Experimental version with example TODO apps</li>
 </ul>
 <h2>License</h2>
 <p>Copyright (c) 2013 Johannes J. Schmidt<br>Licensed under the MIT license.</p>

@@ -116,7 +116,7 @@ var Posts = Backbone.Collection.extend({
   model: Post,
   sync: BackbonePouch.sync({
     db: Pouch('mydb'),
-    fetchMethod: 'query',
+    fetch: 'query',
     options: {
       query: {
         fun: {
@@ -147,7 +147,7 @@ Authors are returnd by `name`, Posts by `date`.
 ```javascript
 Backbone.sync =  BackbonePouch.sync({
   db: Pouch('mydb'),
-  fetchMethod: 'query',
+  fetch: 'query',
   query: {
     limit: 10
   }
