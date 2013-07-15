@@ -258,9 +258,9 @@ var MyModel = Backbone.Model.extend({
 <p>Or you may want to mixin attachment support globally:</p>
 <pre><code class="lang-javascript">_.extend(Backbone.Model.prototype, BackbonePouch.attachments());</code></pre>
 <p>Note that you have to call the attachments function - don&#39;t forget the braces.</p>
-<p>You can also pass the Pouch adapter to <code>BackbonePouch.attachments</code>:</p>
+<p>You can also pass the PouchDB adapter to <code>BackbonePouch.attachments</code>:</p>
 <pre><code class="lang-javascript">_.extend(Backbone.Model.prototype, BackbonePouch.attachments({
-  db: Pouch(&#39;mydb&#39;)
+  db: PouchDB(&#39;mydb&#39;)
 }));</code></pre>
 <h3><code>idAttribute</code></h3>
 <p>You should adjust the <code>idAttribute</code>, because CouchDB (and therefore PouchDB)
@@ -271,7 +271,7 @@ uses <code>_id</code> instead of the default <code>id</code> attribute:</p>
 <pre><code class="lang-javascript">var MyModel = Backbone.Model.extend({
   idAttribute: &#39;_id&#39;,
   sync: BackbonePouch.sync({
-    db: Pouch(&#39;mydb&#39;)
+    db: PouchDB(&#39;mydb&#39;)
   })
 });</code></pre>
 <h3>Query documents of type <code>post</code></h3>
@@ -281,13 +281,13 @@ Limit results to <code>10</code>.</p>
 <pre><code class="lang-javascript">var Post = Backbone.Model.extend({
   idAttribute: &#39;_id&#39;,
   sync: BackbonePouch.sync({
-    db: Pouch(&#39;mydb&#39;)
+    db: PouchDB(&#39;mydb&#39;)
   })
 });
 var Posts = Backbone.Collection.extend({
   model: Post,
   sync: BackbonePouch.sync({
-    db: Pouch(&#39;mydb&#39;),
+    db: PouchDB(&#39;mydb&#39;),
     fetch: &#39;query&#39;,
     options: {
       query: {
@@ -314,7 +314,7 @@ Setup Map Reduce as default query method.
 Limit resultset to <code>10</code>.
 Authors are returnd by <code>name</code>, Posts by <code>date</code>.</p>
 <pre><code class="lang-javascript">Backbone.sync =  BackbonePouch.sync({
-  db: Pouch(&#39;mydb&#39;),
+  db: PouchDB(&#39;mydb&#39;),
   fetch: &#39;query&#39;,
   query: {
     limit: 10
@@ -365,7 +365,7 @@ var Posts = Backbone.Collection.extend({
 });</code></pre>
 <h3>Attachments</h3>
 <pre><code class="lang-javascript">Backbone.sync =  BackbonePouch.sync({
-  db: Pouch(&#39;mydb&#39;)
+  db: PouchDB(&#39;mydb&#39;)
 });
 Backbone.Model.prototype.idAttribute = &#39;_id&#39;;
 var MyModel = Backbone.Model.extend(BackbonePouch.attachments());
@@ -407,9 +407,9 @@ and only the matching attachment names will be returned.</p>
 </ol>
 <h3>backbone-pouch Options</h3>
 <p>These options control the behaviour of backbone-pouch.</p>
-<h4><code>db</code>: Pouch Adapter</h4>
-<p>Setup a database. This option is mendatory. Must be a Pouch adapter:</p>
-<pre><code class="lang-javascript">Pouch(&#39;dbname&#39;)</code></pre>
+<h4><code>db</code>: PouchDB Adapter</h4>
+<p>Setup a database. This option is mendatory. Must be a PouchDB adapter:</p>
+<pre><code class="lang-javascript">PouchDB(&#39;dbname&#39;)</code></pre>
 <p>See <a href="http://pouchdb.com/api.html#create_a_database">Create a database</a>.</p>
 <h4><code>fetch</code>: Fetch Method</h4>
 <p>Specify the fetch method. Can be either <code>allDocs</code> (default), <code>query</code> or <code>spatial</code>.</p>
