@@ -72,11 +72,11 @@ _.extend(Backbone.Model.prototype, BackbonePouch.attachments());
 
 Note that you have to call the attachments function - don't forget the braces.
 
-You can also pass the Pouch adapter to `BackbonePouch.attachments`:
+You can also pass the PouchDB adapter to `BackbonePouch.attachments`:
 
 ```javascript
 _.extend(Backbone.Model.prototype, BackbonePouch.attachments({
-  db: Pouch('mydb')
+  db: PouchDB('mydb')
 }));
 ```
 
@@ -95,7 +95,7 @@ Backbone.Model.prototype.idAttribute = '_id';
 var MyModel = Backbone.Model.extend({
   idAttribute: '_id',
   sync: BackbonePouch.sync({
-    db: Pouch('mydb')
+    db: PouchDB('mydb')
   })
 });
 ```
@@ -109,13 +109,13 @@ Limit results to `10`.
 var Post = Backbone.Model.extend({
   idAttribute: '_id',
   sync: BackbonePouch.sync({
-    db: Pouch('mydb')
+    db: PouchDB('mydb')
   })
 });
 var Posts = Backbone.Collection.extend({
   model: Post,
   sync: BackbonePouch.sync({
-    db: Pouch('mydb'),
+    db: PouchDB('mydb'),
     fetch: 'query',
     options: {
       query: {
@@ -146,7 +146,7 @@ Authors are returnd by `name`, Posts by `date`.
 
 ```javascript
 Backbone.sync =  BackbonePouch.sync({
-  db: Pouch('mydb'),
+  db: PouchDB('mydb'),
   fetch: 'query',
   query: {
     limit: 10
@@ -204,7 +204,7 @@ var Posts = Backbone.Collection.extend({
 ### Attachments
 ```javascript
 Backbone.sync =  BackbonePouch.sync({
-  db: Pouch('mydb')
+  db: PouchDB('mydb')
 });
 Backbone.Model.prototype.idAttribute = '_id';
 var MyModel = Backbone.Model.extend(BackbonePouch.attachments());
@@ -261,11 +261,11 @@ Options are merged (using Underscores [extend](http://underscorejs.org/#extend))
 ### backbone-pouch Options
 These options control the behaviour of backbone-pouch.
 
-#### `db`: Pouch Adapter
-Setup a database. This option is mendatory. Must be a Pouch adapter:
+#### `db`: PouchDB Adapter
+Setup a database. This option is mendatory. Must be a PouchDB adapter:
 
 ```javascript
-Pouch('dbname')
+PouchDB('dbname')
 ```
 
 See [Create a database](http://pouchdb.com/api.html#create_a_database).
