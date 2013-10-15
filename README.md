@@ -408,7 +408,7 @@ There were some breaking changes, so had to move up the major version.
 
 
 ## Release History
-
+* `1.1.1`: Adapt PouchDB attachment API change with seperate docId and attachment name
 * `1.1`: Attachment support
 * `1.0`: New chained api, Node support, tests. Support listen to changes feed. Use Grunt.
 * `prior 1.0`: Experimental version with example TODO apps
