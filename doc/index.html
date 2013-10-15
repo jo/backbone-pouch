@@ -511,14 +511,19 @@ to sync your local TODO database.</p>
 Lint and test your code using <a href="http://gruntjs.com/">Grunt</a>.</p>
 <p><em>Also, please don&#39;t edit files in the &quot;dist&quot; subdirectory as they are generated via Grunt.
 You&#39;ll find source code in the &quot;lib&quot; subdirectory!</em></p>
+<h2>Generating the Documentation</h2>
 <p><em>The files in the &quot;doc&quot; subdirectory are generated via Grunt, too.
 Edit this README.md and template.jst and run <code>grunt doc</code> to generate the documentation.</em></p>
+<p>To update the Github page, change to the <code>gh-pages</code> branch and merge the <code>doc</code> subtree:</p>
+<pre><code>git pull -s subtree origin master</code></pre>
+<p>You will need <code>git-subtree</code>, of course.</p>
 <h2>Versioning</h2>
 <p>backbone-pouch follows <a href="http://semver-ftw.org/">semver-ftw</a>.
 Dont think 1.0.0 means production ready yet.
 There were some breaking changes, so had to move up the major version.</p>
 <h2>Release History</h2>
 <ul>
+<li><code>1.1.1</code>: Adapt PouchDB attachment API change with seperate docId and attachment name</li>
 <li><code>1.1</code>: Attachment support</li>
 <li><code>1.0</code>: New chained api, Node support, tests. Support listen to changes feed. Use Grunt.</li>
 <li><code>prior 1.0</code>: Experimental version with example TODO apps</li>
