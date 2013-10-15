@@ -397,9 +397,16 @@ Lint and test your code using [Grunt](http://gruntjs.com/).
 _Also, please don't edit files in the "dist" subdirectory as they are generated via Grunt.
 You'll find source code in the "lib" subdirectory!_
 
+## Generating the Documentation
+
 _The files in the "doc" subdirectory are generated via Grunt, too.
 Edit this README.md and template.jst and run `grunt doc` to generate the documentation._
 
+To update the Github page, change to the `gh-pages` branch and merge the `doc` subtree:
+
+    git pull -s subtree origin master
+
+You will need `git-subtree`, of course.
 
 ## Versioning
 backbone-pouch follows [semver-ftw](http://semver-ftw.org/).
