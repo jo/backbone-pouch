@@ -1,4 +1,4 @@
-/*! backbone-pouch - v1.1.0 - 2013-07-16
+/*! backbone-pouch - v1.1.0 - 2013-10-15
 * http://jo.github.io/backbone-pouch/
 * Copyright (c) 2013 Johannes J. Schmidt; Licensed MIT */
 (function(root) {
@@ -182,10 +182,6 @@
   BackbonePouch.attachments = function(defaults) {
     defaults = defaults || {};
 
-    function attachmentId(id, name) {
-      return encodeURIComponent(id) + '/' + encodeURIComponent(name);
-    }
-
     function getPouch(model) {
       if (model.pouch && model.pouch.db) {
         return model.pouch.db;
@@ -226,7 +222,7 @@
         // TODO: first look at the _attachments stub,
         // maybe there the data is already there
         var db = getPouch(this);
-        return db.getAttachment(attachmentId(this.id, name), done);
+        return db.getAttachment(this.id, name, done);
       },
       attach: function(blob, name, type, done) {
         if (typeof name === 'function') {
@@ -248,7 +244,7 @@
         
         var db = getPouch(this);
         var that = this;
-        return db.putAttachment(attachmentId(this.id, name), this.get('_rev'), blob, type, function(err, response) {
+        return db.putAttachment(this.id, name, this.get('_rev'), blob, type, function(err, response) {
           if (!err && response.rev) {
             var atts = that.get('_attachments') || {};
             atts[name] = {
