@@ -119,6 +119,7 @@ var Posts = Backbone.Collection.extend({
     fetch: 'query',
     options: {
       query: {
+        include_docs: true,
         fun: {
           map: function(doc) {
             if (doc.type === 'post') {
@@ -129,6 +130,7 @@ var Posts = Backbone.Collection.extend({
         limit: 10
       },
       changes: {
+        include_docs: true,
         filter: function(doc) {
           return doc._deleted || doc.type === 'post';
         }
@@ -148,8 +150,11 @@ Authors are returnd by `name`, Posts by `date`.
 Backbone.sync =  BackbonePouch.sync({
   db: PouchDB('mydb'),
   fetch: 'query',
-  query: {
-    limit: 10
+  options: {
+    query: {
+      include_docs: true,
+      limit: 10
+    }
   }
 });
 Backbone.Model.prototype.idAttribute = '_id';
@@ -163,18 +168,22 @@ var Author = Backbone.Model.extend();
 var Authors = Backbone.Collection.extend({
   model: Author,
   pouch: {
-    query: {
-      fun: {
-        map: function(doc) {
-          if (doc.type === 'author') {
-            emit(doc.name, null)
+    options: {
+      query: {
+        include_docs: true,
+        fun: {
+          map: function(doc) {
+            if (doc.type === 'author') {
+              emit(doc.name, null)
+            }
           }
         }
-      }
-    },
-    changes: {
-      filter: function(doc) {
-        return doc._deleted || doc.type === 'author';
+      },
+      changes: {
+        include_docs: true,
+        filter: function(doc) {
+          return doc._deleted || doc.type === 'author';
+        }
       }
     }
   }
@@ -183,18 +192,22 @@ var Post = Backbone.Model.extend();
 var Posts = Backbone.Collection.extend({
   model: Post,
   pouch: {
-    query: {
-      fun: {
-        map: function(doc) {
-          if (doc.type === 'post') {
-            emit(doc.date, null)
+    options: {
+      query: {
+        include_docs: true,
+        fun: {
+          map: function(doc) {
+            if (doc.type === 'post') {
+              emit(doc.date, null)
+            }
           }
         }
-      }
-    },
-    changes: {
-      filter: function(doc) {
-        return doc._deleted || doc.type === 'post';
+      },
+      changes: {
+        include_docs: true,
+        filter: function(doc) {
+          return doc._deleted || doc.type === 'post';
+        }
       }
     }
   }
@@ -415,6 +428,7 @@ There were some breaking changes, so had to move up the major version.
 
 
 ## Release History
+* `1.2.0`: Change defaults: do not listen and include_docs
 * `1.1.1`: Adapt PouchDB attachment API change with seperate docId and attachment name
 * `1.1`: Attachment support
 * `1.0`: New chained api, Node support, tests. Support listen to changes feed. Use Grunt.

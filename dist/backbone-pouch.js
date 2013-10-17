@@ -1,4 +1,4 @@
-/*! backbone-pouch - v1.1.1 - 2013-10-15
+/*! backbone-pouch - v1.2.0 - 2013-10-17
 * http://jo.github.io/backbone-pouch/
 * Copyright (c) 2013 Johannes J. Schmidt; Licensed MIT */
 (function(root) {
@@ -26,24 +26,17 @@
 
   BackbonePouch.defaults = {
     fetch: 'allDocs',
-    listen: true,
+    listen: false,
     options: {
       post: {},
       put: {},
       get: {},
       remove: {},
-      allDocs: {
-        include_docs: true
-      },
-      query: {
-        include_docs: true
-      },
-      spatial: {
-        include_docs: true
-      },
+      allDocs: {},
+      query: {},
+      spatial: {},
       changes: {
-        continuous: true,
-        include_docs: true
+        continuous: true
       }
     }
   };
@@ -65,7 +58,7 @@
 
     // merge PouchDB options
     _.each(defaults.options, function(value, key) {
-      options.options[key] = options.options[key] || {};
+      options.options[key] = key in options.options ? options.options[key] : {};
       _.extend(options.options[key], value);
     });
   }

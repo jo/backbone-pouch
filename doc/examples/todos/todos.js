@@ -67,14 +67,19 @@ $(function(){
 
     // Include docs in Map Reduce response. Order by `order`.
     pouch: {
+      listen: true,
       fetch: 'query',
       options: {
         query: {
+          include_docs: true,
           fun: {
             map: function(doc) {
               emit(doc.order, null);
             }
           }
+        },
+        changes: {
+          include_docs: true
         }
       }
     },

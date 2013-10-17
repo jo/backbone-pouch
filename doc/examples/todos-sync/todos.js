@@ -14,6 +14,7 @@ $(function(){
     // We currently suffix by the PouchDB version here
     // because at the moment PouchDB does not support upgrade
     db: Pouch(dbname),
+    listen: true,
     fetch: 'query'
   });
 
@@ -68,6 +69,7 @@ $(function(){
     pouch: {
       options: {
         query: {
+          include_docs: true,
           fun: {
             map: function(doc) {
               if (doc.type === 'todo') {
@@ -77,6 +79,7 @@ $(function(){
           }
         },
         changes: {
+          include_docs: true,
           filter: function(doc) {
             return doc._deleted || doc.type === 'todo';
           }
@@ -296,6 +299,7 @@ $(function(){
     pouch: {
       options: {
         query: {
+          include_docs: true,
           fun: {
             map: function(doc) {
               if (doc.type === 'replication') {
@@ -305,6 +309,7 @@ $(function(){
           }
         },
         changes: {
+          include_docs: true,
           filter: function(doc) {
             return doc._deleted || doc.type === 'replication';
           }

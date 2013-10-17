@@ -80,7 +80,14 @@ exports.sync = {
   },
   allDocs: function(test) {
     var Collection = backbone.Collection.extend({
-      model: this.Model
+      model: this.Model,
+      pouch: {
+        options: {
+          allDocs: {
+            include_docs: true
+          }
+        }
+      }
     });
     var collection = new Collection();
     var model = new collection.model();
@@ -108,6 +115,7 @@ exports.sync = {
         fetch: 'query',
         options: {
           query: {
+            include_docs: true,
             fun: {
               map: function(doc) {
                 emit(doc._id, null);
