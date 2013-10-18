@@ -38,12 +38,12 @@ exports.sync = {
     test.equal(backbone_pouch.sync({ fetch: 'query' }).defaults.fetch, 'query', 'should have overwritten fetch method.');
     test.done();
   },
-  // 'deep nested falsy defaults': function(test) {
-  //   test.expect(1);
-  //   backbone_pouch.defaults.options.query.include_docs = true;
-  //   test.equal(backbone_pouch.sync({ options: { query: { include_docs: false } } }).defaults.options.query.include_docs, false, 'should have overwritten falsy value.');
-  //   test.done();
-  // }
+  'deep nested falsy defaults': function(test) {
+    test.expect(1);
+    backbone_pouch.defaults.options.query.include_docs = true;
+    test.equal(backbone_pouch.sync({ options: { query: { include_docs: false } } }).defaults.options.query.include_docs, false, 'should have overwritten falsy value.');
+    test.done();
+  }
 };
 
 exports.attachments = {

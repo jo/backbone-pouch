@@ -1,4 +1,4 @@
-/*! backbone-pouch - v1.2.0 - 2013-10-17
+/*! backbone-pouch - v1.2.0 - 2013-10-18
 * http://jo.github.io/backbone-pouch/
 * Copyright (c) 2013 Johannes J. Schmidt; Licensed MIT */
 (function(root) {
@@ -41,37 +41,37 @@
     }
   };
 
-  function applyDefaults(options, defaults) {
-    options.options = options.options || {};
-    defaults.options = defaults.options || {};
+  // inspired from https://github.com/Raynos/xtend
+  function extend() {
+    var target = {};
 
-    // merge toplevel options
-    if (typeof options.fetch === 'undefined') {
-      options.fetch = defaults.fetch;
-    }
-    if (typeof options.listen === 'undefined') {
-      options.listen = defaults.listen;
-    }
-    if (typeof options.db === 'undefined') {
-      options.db = defaults.db;
+    for (var i = 0; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      if (typeof source !== 'object') {
+        continue;
+      }
+
+      for (var name in source) {
+        if (typeof source[name] === 'object' && typeof target[name] === 'object') {
+          target[name] = extend(target[name] || {}, source[name]);
+        } else {
+          target[name] = source[name];
+        }
+      }
     }
 
-    // merge PouchDB options
-    _.each(defaults.options, function(value, key) {
-      options.options[key] = key in options.options ? options.options[key] : {};
-      _.extend(options.options[key], value);
-    });
+    return target;
   }
 
   // backbone-pouch sync adapter
   BackbonePouch.sync = function(defaults) {
     defaults = defaults || {};
-    applyDefaults(defaults, BackbonePouch.defaults);
+    defaults = extend(BackbonePouch.defaults, defaults);
 
     var adapter = function(method, model, options) {
       options = options || {};
-      applyDefaults(options, model && model.pouch || {});
-      applyDefaults(options, defaults);
+      options = extend(defaults, model && model.pouch || {}, options);
 
       // This is to get the options (especially options.db)
       // by calling model.sync() without arguments.
