@@ -428,6 +428,7 @@ There were some breaking changes, so had to move up the major version.
 
 
 ## Release History
+* `1.2.1`: Improve option inheritance
 * `1.2.0`: Change defaults: do not listen and include_docs
 * `1.1.1`: Adapt PouchDB attachment API change with seperate docId and attachment name
 * `1.1`: Attachment support
