@@ -1,4 +1,4 @@
-/*! backbone-pouch - v1.2.1 - 2013-10-18
+/*! backbone-pouch - v1.3.0 - 2013-10-18
 * http://jo.github.io/backbone-pouch/
 * Copyright (c) 2013 Johannes J. Schmidt; Licensed MIT */
 (function(root) {
@@ -98,17 +98,6 @@
           response = {};
         }
         if (method === 'read') {
-          if (response.rows) {
-            response = _.map(response.rows, function(row) {
-              // use `doc` value if present
-              return row.doc ||
-                // or use `value` property otherwise
-                // and inject id
-                _.extend({
-                  _id: row.id
-                }, row.value);
-            });
-          }
           if (options.listen) {
             // TODO:
             // * implement for model

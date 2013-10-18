@@ -136,7 +136,10 @@ var Posts = Backbone.Collection.extend({
         }
       }
     }
-  })
+  }),
+  parse: function(result) {
+    return _.pluck(result.rows, 'doc');
+  }
 });
 ```
 
@@ -186,6 +189,9 @@ var Authors = Backbone.Collection.extend({
         }
       }
     }
+  },
+  parse: function(result) {
+    return _.pluck(result.rows, 'doc');
   }
 });
 var Post = Backbone.Model.extend();
@@ -210,6 +216,9 @@ var Posts = Backbone.Collection.extend({
         }
       }
     }
+  },
+  parse: function(result) {
+    return _.pluck(result.rows, 'doc');
   }
 });
 ```
@@ -333,8 +342,17 @@ Options for fetching a single document.
 
 See [Fetch a Document](http://pouchdb.com/api.html#fetch_a_document).
 
-##### `allDocs`: Retrieve Collection
-Options for fetching all documents.
+##### Fetch Collections
+When fetching collections from views, one might want to parse the result, eg:
+
+```javascript
+parse: function(result) {
+  return _.pluck(result.rows, 'doc');
+}
+```
+
+###### `allDocs`: Retrieve Collection
+Options for fetching all documents. This is a built in view which outputs all documents by id.
 
 * `attachments`: Include attachment data.
 * `conflicts`: If specified conflicting leaf revisions will be attached in _conflicts array.
@@ -348,7 +366,7 @@ Options for fetching all documents.
 
 See [Fetch Documents](http://pouchdb.com/api.html#fetch_documents).
 
-##### `query`: Retrieve Collection via Map Reduce
+###### `query`: Retrieve Collection via Map Reduce
 Query options for Map Reduce queries.
 
 * `attachments`: Include attachment data.
@@ -365,7 +383,7 @@ Query options for Map Reduce queries.
 
 See [Query the Database](http://pouchdb.com/api.html#query_the_database).
 
-##### `spatial`: Retrieve Collection via Spatial Index
+###### `spatial`: Retrieve Collection via Spatial Index
 Options for Spatial query. The spatial query has not been tested.
 You have to use a PouchDB build with included [Spatial](https://github.com/daleharvey/pouchdb/blob/master/src/plugins/pouchdb.spatial.js) plugin.
 
@@ -428,6 +446,7 @@ There were some breaking changes, so had to move up the major version.
 
 
 ## Release History
+* `1.3.0`: Do not parse view results, leave that up to the user
 * `1.2.1`: Improve option inheritance
 * `1.2.0`: Change defaults: do not listen and include_docs
 * `1.1.1`: Adapt PouchDB attachment API change with seperate docId and attachment name

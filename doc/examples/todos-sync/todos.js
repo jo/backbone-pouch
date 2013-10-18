@@ -87,6 +87,11 @@ $(function(){
       }
     },
 
+    // parse view result, use doc property injected via `include_docs`
+    parse: function(result) {
+      return _.pluck(result.rows, 'doc');
+    },
+
     // Filter down the list of all todo items that are finished.
     done: function() {
       return this.filter(function(todo){ return todo.get('done'); });
@@ -315,6 +320,11 @@ $(function(){
           }
         }
       }
+    },
+
+    // parse view result, use doc property injected via `include_docs`
+    parse: function(result) {
+      return _.pluck(result.rows, 'doc');
     },
 
     // Replications are sorted by url.

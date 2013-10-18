@@ -1,5 +1,6 @@
 'use strict';
 
+var _ = require('underscore');
 var backbone = require('backbone');
 var pouch = require('pouchdb');
 var backbone_pouch = require('../lib/backbone-pouch.js');
@@ -87,6 +88,9 @@ exports.sync = {
             include_docs: true
           }
         }
+      },
+      parse: function(result) {
+        return _.pluck(result.rows, 'doc');
       }
     });
     var collection = new Collection();
@@ -123,6 +127,9 @@ exports.sync = {
             }
           }
         }
+      },
+      parse: function(result) {
+        return _.pluck(result.rows, 'doc');
       }
     });
     var collection = new Collection();
