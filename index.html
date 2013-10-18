@@ -308,7 +308,10 @@ var Posts = Backbone.Collection.extend({
         }
       }
     }
-  })
+  }),
+  parse: function(result) {
+    return _.pluck(result.rows, &#39;doc&#39;);
+  }
 });</code></pre>
 <h3>Global Backbone Sync Configuration</h3>
 <p>Use <code>mydb</code> as default for all databases.
@@ -350,6 +353,9 @@ var Authors = Backbone.Collection.extend({
         }
       }
     }
+  },
+  parse: function(result) {
+    return _.pluck(result.rows, &#39;doc&#39;);
   }
 });
 var Post = Backbone.Model.extend();
@@ -374,6 +380,9 @@ var Posts = Backbone.Collection.extend({
         }
       }
     }
+  },
+  parse: function(result) {
+    return _.pluck(result.rows, &#39;doc&#39;);
   }
 });</code></pre>
 <h3>Attachments</h3>
@@ -458,8 +467,13 @@ Default is true.</p>
 <li><code>revs</code>: Include revision history of the document.</li>
 </ul>
 <p>See <a href="http://pouchdb.com/api.html#fetch_a_document">Fetch a Document</a>.</p>
-<h5><code>allDocs</code>: Retrieve Collection</h5>
-<p>Options for fetching all documents.</p>
+<h5>Fetch Collections</h5>
+<p>When fetching collections from views, one might want to parse the result, eg:</p>
+<pre><code class="lang-javascript">parse: function(result) {
+  return _.pluck(result.rows, &#39;doc&#39;);
+}</code></pre>
+<h6><code>allDocs</code>: Retrieve Collection</h6>
+<p>Options for fetching all documents. This is a built in view which outputs all documents by id.</p>
 <ul>
 <li><code>attachments</code>: Include attachment data.</li>
 <li><code>conflicts</code>: If specified conflicting leaf revisions will be attached in _conflicts array.</li>
@@ -472,7 +486,7 @@ Default is true.</p>
 <li><code>startkey</code>: Startkey of the query.</li>
 </ul>
 <p>See <a href="http://pouchdb.com/api.html#fetch_documents">Fetch Documents</a>.</p>
-<h5><code>query</code>: Retrieve Collection via Map Reduce</h5>
+<h6><code>query</code>: Retrieve Collection via Map Reduce</h6>
 <p>Query options for Map Reduce queries.</p>
 <ul>
 <li><code>attachments</code>: Include attachment data.</li>
@@ -488,7 +502,7 @@ Default is true.</p>
 <li><code>startkey</code>: Startkey of the query.</li>
 </ul>
 <p>See <a href="http://pouchdb.com/api.html#query_the_database">Query the Database</a>.</p>
-<h5><code>spatial</code>: Retrieve Collection via Spatial Index</h5>
+<h6><code>spatial</code>: Retrieve Collection via Spatial Index</h6>
 <p>Options for Spatial query. The spatial query has not been tested.
 You have to use a PouchDB build with included <a href="https://github.com/daleharvey/pouchdb/blob/master/src/plugins/pouchdb.spatial.js">Spatial</a> plugin.</p>
 <ul>
@@ -536,6 +550,7 @@ Dont think 1.0.0 means production ready yet.
 There were some breaking changes, so had to move up the major version.</p>
 <h2>Release History</h2>
 <ul>
+<li><code>1.3.0</code>: Do not parse view results, leave that up to the user</li>
 <li><code>1.2.1</code>: Improve option inheritance</li>
 <li><code>1.2.0</code>: Change defaults: do not listen and include_docs</li>
 <li><code>1.1.1</code>: Adapt PouchDB attachment API change with seperate docId and attachment name</li>
