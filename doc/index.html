@@ -1,16 +1,110 @@
 <!DOCTYPE  html>
-<html>
+<html lang=en>
   <head>
-    <meta charset="utf-8">
-    
-    <title>doc</title>
+    <meta charset=utf-8>
+    <title>backbone-pouch: Backbone PouchDB Sync Adapter</title>
+    <meta name=viewport content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0, user-scalable=no">
+    <link href='http://fonts.googleapis.com/css?family=Quicksand:400,300|Noto+Serif' rel=stylesheet type=text/css>
     <style>
-      /*github.com style (c) Vasily Polovnyov <vast@whiteants.net>*/
-      pre code {
-        display: block; padding: 0.5em;
+      body {
+        margin: 5%;
+        font-family: 'Noto Serif', serif;
         color: #333;
-        background: #f8f8ff
       }
+      a {
+        color: #2e64fe;
+      }
+      nav a {
+        text-decoration: none;
+      }
+      nav {
+        border-bottom: 1px solid black;
+        padding-bottom: 3px;
+      }
+      nav ul {
+        margin: 0;
+        padding: 0;
+      }
+      nav ul:first-child {
+        float: right;
+      }
+      nav li {
+        display: inline;
+        margin-right: 1em;
+      }
+      nav ul:first-child li {
+        margin-right: 0;
+        margin-left: 1em;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Quicksand', sans-serif;
+        font-weight: normal;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      h1 a {
+        float: right;
+      }
+      h2, h3, h4, h5, h6 {
+        margin: 6ex 0 1ex 0;
+      }
+      h1 { font-size: 3em; }
+      h2 { font-size: 2em; }
+      h3 { font-size: 1.7em; }
+      h4 { font-size: 1.5em; }
+      h5 { font-size: 1.3em; }
+      h6 { font-size: 1.1em; }
+      h2 code, h3 code, h4 code, h5 code, h6 code {
+        font: inherit;
+        font-weight: bold;
+      }
+      code, pre {
+        font-family: Monaco, Bitstream Vera Sans Mono, Lucida Console, Terminal;
+        color: #333;
+        font-size: 12px;
+      }
+      pre {
+        padding: 8px 15px;
+        background: #f8f8f8;
+        border-radius: 5px;
+        border: 1px solid #e5e5e5;
+        overflow-x: auto;
+      }
+      main li {
+        margin-bottom: 1ex;
+      }
+      main ul {
+        list-style-type: none;
+      }
+      main ul li {
+        margin: 1.5ex 0;
+      }
+      main li code:first-child {
+        font-size: 1em;
+        padding: 1px 3px;
+        background: #f8f8f8;
+        border-radius: 2px;
+        border: 1px solid #e5e5e5;
+      }
+      a[href="http://jo.github.io/backbone-pouch/examples/todos"],
+      a[href="http://jo.github.io/backbone-pouch/examples/todos-sync"] {
+        border-radius: 5px;
+        border: 1px solid #e5e5e5;
+        display: block;
+        width: 490px;
+        margin: 1ex 0;
+        padding: 2px 5px;
+      }
+      a[href="http://jo.github.io/backbone-pouch/examples/todos"] {
+        background: url("examples/todos/screenshot.png") no-repeat scroll center center transparent;
+        height: 323px;
+      }
+      a[href="http://jo.github.io/backbone-pouch/examples/todos-sync"] {
+        background: url("examples/todos-sync/screenshot.png") no-repeat scroll center center transparent;
+        height: 301px;
+      }
+      /*github.com style (c) Vasily Polovnyov <vast@whiteants.net>*/
       pre .comment,
       pre .template_comment,
       pre .diff .header,
@@ -112,7 +206,20 @@
     </style>
   </head>
   <body>  
-    <h1 id="backbone-pouch-build-status-https-secure-travis-ci-org-jo-backbone-pouch-png-branch-master-http-travis-ci-org-jo-backbone-pouch-">backbone-pouch <a href="http://travis-ci.org/jo/backbone-pouch"><img src="https://secure.travis-ci.org/jo/backbone-pouch.png?branch=master" alt="Build Status"></a></h1>
+    <nav>
+      <ul>
+        <li><a href=https://raw.github.com/jo/backbone-pouch/master/dist/backbone-pouch.min.js>Download</a></li>
+        <li><a href=https://github.com/jo/backbone-pouch>Source</a></li>
+        <li><a href=https://github.com/jo/backbone-pouch/issues>Issues</a></li>
+      </ul>
+      <ul>
+        <li><a href=#usage>Usage</a></li>
+        <li><a href=#configuration>Configuration</a></li>
+        <li><a href=#examples>Examples</a></li>
+      </ul>
+    </nav>
+    <main>
+      <h1 id="backbone-pouch-build-status-https-secure-travis-ci-org-jo-backbone-pouch-png-branch-master-http-travis-ci-org-jo-backbone-pouch-">backbone-pouch <a href="http://travis-ci.org/jo/backbone-pouch"><img src="https://secure.travis-ci.org/jo/backbone-pouch.png?branch=master" alt="Build Status"></a></h1>
 <p><a href="http://backbonejs.org/">Backbone</a> <a href="http://pouchdb.com/">PouchDB</a> Sync Adapter</p>
 <h2 id="getting-started">Getting Started</h2>
 <p>You can use backbone-pouch on the server with node or in the browser:</p>
@@ -455,5 +562,6 @@ There were some breaking changes, so had to move up the major version.</p>
 <h2 id="license">License</h2>
 <p>Copyright (c) 2013 Johannes J. Schmidt<br>Licensed under the MIT license.</p>
 
+    </main>
   </body>
 </html>

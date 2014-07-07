@@ -75,7 +75,9 @@ module.exports = function(grunt) {
       doc: {
         src: 'README.md',
         dest: 'doc/index.html',
-        template: 'template.jst'
+        options: {
+          template: 'template.jst'
+        }
       }
     },
     copy: {

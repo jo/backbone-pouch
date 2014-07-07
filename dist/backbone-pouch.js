@@ -1,4 +1,4 @@
-/*! backbone-pouch - v1.3.0 - 2014-07-07
+/*! backbone-pouch - v1.4.0 - 2014-07-07
 * http://jo.github.io/backbone-pouch/
 * Copyright (c) 2014 Johannes J. Schmidt; Licensed MIT */
 (function(root) {
