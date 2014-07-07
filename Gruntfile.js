@@ -35,8 +35,7 @@ module.exports = function(grunt) {
       files: ['test/**/*_test.js']
     },
     clean: {
-      test: ['_test_*'],
-      doc: ['tmp']
+      test: ['_test_*']
     },
     jshint: {
       options: {
@@ -74,16 +73,12 @@ module.exports = function(grunt) {
     },
     markdown: {
       doc: {
-        files: 'README.md',
-        dest: 'tmp',
+        src: 'README.md',
+        dest: 'doc/index.html',
         template: 'template.jst'
       }
     },
     copy: {
-      doc: {
-        src: 'tmp/README.html',
-        dest: 'doc/index.html'
-      },
       todos: {
         expand: true,
         cwd: 'dist/',
@@ -110,7 +105,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
 
   // Generate docs.
-  grunt.registerTask('doc', ['markdown:doc', 'copy:doc']);
+  grunt.registerTask('doc', ['markdown:doc']);
 
   // Generate examples.
   grunt.registerTask('examples', ['copy:todos', 'copy:todos-sync']);

@@ -1,6 +1,6 @@
-/*! backbone-pouch - v1.3.0 - 2013-10-18
+/*! backbone-pouch - v1.3.0 - 2014-07-07
 * http://jo.github.io/backbone-pouch/
-* Copyright (c) 2013 Johannes J. Schmidt; Licensed MIT */
+* Copyright (c) 2014 Johannes J. Schmidt; Licensed MIT */
 (function(root) {
   'use strict';
   
@@ -53,7 +53,7 @@
       }
 
       for (var name in source) {
-        if (typeof source[name] === 'object' && typeof target[name] === 'object') {
+        if (source[name] && target[name] && typeof source[name] === 'object' && typeof target[name] === 'object' && name !== 'db') {
           target[name] = extend(target[name] || {}, source[name]);
         } else {
           target[name] = source[name];
@@ -219,11 +219,6 @@
         name = name || blob.filename;
         type = type || blob.type;
 
-        // If I do not already have an id, give me one
-        if (!this.id) {
-          this.set({ _id: Math.uuid() }, { silent: true });
-        }
-        
         var db = getPouch(this);
         var that = this;
         return db.putAttachment(this.id, name, this.get('_rev'), blob, type, function(err, response) {
@@ -233,7 +228,7 @@
               content_type: type,
               stub: true
             };
-            that.set({ _rev: response.rev, _attachments: atts }, { silent: true });
+            that.set({ _id: response.id, _rev: response.rev, _attachments: atts }, { silent: true });
           }
           done(err, response);
         });
