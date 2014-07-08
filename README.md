@@ -9,9 +9,9 @@ You can use backbone-pouch on the server with node or in the browser:
 Install the module with: `npm install backbone-pouch`
 
 ```javascript
-var backbone = require('backbone');
-var backbone_pouch = require('backbone-pouch');
-backbone.sync = backbone_pouch.sync();
+var Backbone = require('backbone');
+var BackbonePouch = require('backbone-pouch');
+Backbone.sync = BackbonePouch.sync();
 ```
 
 ### In the Browser
@@ -24,7 +24,7 @@ backbone.sync = backbone_pouch.sync();
 <script src="underscore-min.js"></script>
 <script src="backbone-min.js"></script>
 <script src="pouchdb-nightly.min.js"></script>
-<script src="backbone-pouch.min.js"></script>
+<script src="backbone-pouch.js"></script>
 <script>
   Backbone.sync = BackbonePouch.sync();
 </script>
@@ -420,24 +420,17 @@ to sync your local TODO database.
 
 
 ## Contributing
-backbone-pouch is written with [Felix Geisendörfers Node.js Style Guide](https://github.com/felixge/node-style-guide) in mind.
-
-Add [nodeunit](https://github.com/caolan/nodeunit) tests for any new or changed functionality.
-Lint and test your code using [Grunt](http://gruntjs.com/).
-
-_Also, please don't edit files in the "dist" subdirectory as they are generated via Grunt.
-You'll find source code in the "lib" subdirectory!_
-
-## Generating the Documentation
-
-_The files in the "doc" subdirectory are generated via Grunt, too.
-Edit this README.md and template.jst and run `grunt doc` to generate the documentation._
+* Install dependencies via `npm install`
+* Edit `backbone-pouch.js`
+* Write [tap](https://github.com/isaacs/node-tap) tests
+* Run the tests with `npm test`
+* Generate the docs with `npm run docs`. This will render `README.md` using `doc/index.html.jst`
 
 To update the Github page, change to the `gh-pages` branch and merge the `doc` subtree:
 
-    git pull -s subtree origin master
-
-You will need `git-subtree`, of course.
+```bash
+git pull -s subtree origin master
+```
 
 ## Versioning
 backbone-pouch follows [semver-ftw](http://semver-ftw.org/).
@@ -446,6 +439,8 @@ There were some breaking changes, so had to move up the major version.
 
 
 ## Release History
+* `1.5.0`: Remove Grunt in favour of purenpm purism and switch to tap
+* `1.4.0`: Update Backbone and Underscore
 * `1.3.0`: Do not parse view results, leave that up to the user
 * `1.2.1`: Improve option inheritance
 * `1.2.0`: Change defaults: do not listen and include_docs
@@ -455,5 +450,5 @@ There were some breaking changes, so had to move up the major version.
 * `prior 1.0`: Experimental version with example TODO apps
 
 ## License
-Copyright (c) 2013 Johannes J. Schmidt  
+Copyright (c) 2013-2014 Johannes J. Schmidt, TF  
 Licensed under the MIT license.
