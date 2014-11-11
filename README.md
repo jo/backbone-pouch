@@ -401,7 +401,7 @@ Options passed to changes feed.
 * `continuous`: Continuously listen to changes. Default is true.
 * `include_docs`: Whether to include the document on each change. Default is true.
 
-See [Listen to Database Changes](http://pouchdb.com/api.html#listen_to_database_changes).
+See [Listen to Database Changes](http://pouchdb.com/api.html#changes).
 
 <p id=examples></p>
 ## Examples
