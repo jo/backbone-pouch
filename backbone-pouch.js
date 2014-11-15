@@ -8,7 +8,7 @@
 
 (function(root) {
   'use strict';
-  
+
   var BackbonePouch;
   if (typeof exports === 'object') {
     BackbonePouch = exports;
@@ -150,7 +150,14 @@
           if (!options.options[options.fetch].fun) {
             throw new Error('A "' + options.fetch + '.fun" object must be specified');
           }
-          return options.db[options.fetch](options.options[options.fetch].fun, options.options[options.fetch], callback);
+          return options.db[options.fetch](
+            options.options[options.fetch].fun,
+            options.options[options.fetch]
+          ).then( function(resp) {
+            callback(null, resp);
+          }).catch(function(err) {
+            callback(err);
+          });
         }
         // allDocs or spatial query
         options.db[options.fetch](options.options[options.fetch], callback);
@@ -176,18 +183,18 @@
       if (model.collection && model.collection.pouch && model.collection.pouch.db) {
         return model.collection.pouch.db;
       }
-      
+
       if (defaults.db) {
         return defaults.db;
       }
-      
+
       var options = model.sync();
       if (options.db) {
         return options.db;
       }
 
       // TODO: ask sync adapter
-        
+
       throw new Error('A "db" property must be specified');
     }
 
@@ -199,7 +206,7 @@
             if (typeof filter === 'function') {
               return filter(key, atts[key]);
             }
-            
+
             return atts[key].content_type.match(filter);
           });
         }
