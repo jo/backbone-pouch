@@ -358,7 +358,7 @@ Options for fetching all documents. This is a built in view which outputs all do
 * `conflicts`: If specified conflicting leaf revisions will be attached in _conflicts array.
 * `descending`: Return result in descending order. Default is ascending order.
 * `endkey`: Endkey of the query.
-* `include_docs`: Whether to include the document in `doc` property. Default is true.
+* `include_docs`: Whether to include the document in `doc` property.
 * `key`: Key of the query.
 * `keys`: Multiple keys.
 * `limit`: Limit the resultset. Default is to return all documents.
@@ -374,7 +374,7 @@ Query options for Map Reduce queries.
 * `descending`: Return result in descending order. Default is ascending order.
 * `endkey`: Endkey of the query.
 * `fun`: Map Reduce Function: can be a string addressing a view in a design document or an object with a `map` and optional `reduce` property. A map function is _required_, if you use the query fetch method.
-* `include_docs`: Whether to include the document in `doc` property. Default is true.
+* `include_docs`: Whether to include the document in `doc` property.
 * `key`: Key of the query.
 * `keys`: Multiple keys.
 * `limit`: Limit the resultset. Default is to return all documents.
