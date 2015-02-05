@@ -107,9 +107,9 @@
             // TODO:
             // * implement for model
             // * allow overwriding of since.
-            options.db.info(function(err, info) {
+            _.result(options, 'db').info(function(err, info) {
               // get changes since info.update_seq
-              options.db.changes(_.extend({}, options.options.changes, {
+              _.result(options, 'db').changes(_.extend({}, options.options.changes, {
                 since: info.update_seq,
                 onChange: function(change) {
                   var todo = model.get(change.id);
@@ -138,19 +138,19 @@
         return options.success && options.success(response);
       }
 
-      model.trigger('request', model, options.db, options);
+      model.trigger('request', model, _.result(options, 'db'), options);
 
       if (method === 'read') {
         // get single model
         if (model.id) {
-          return options.db.get(model.id, options.options.get, callback);
+          return _.result(options, 'db').get(model.id, options.options.get, callback);
         }
         // query view or spatial index
         if (options.fetch === 'query' || options.fetch === 'spatial') {
           if (!options.options[options.fetch].fun) {
             throw new Error('A "' + options.fetch + '.fun" object must be specified');
           }
-          return options.db[options.fetch](
+          return _.result(options, 'db')[options.fetch](
             options.options[options.fetch].fun,
             options.options[options.fetch]
           ).then( function(resp) {
@@ -160,9 +160,9 @@
           });
         }
         // allDocs or spatial query
-        options.db[options.fetch](options.options[options.fetch], callback);
+        _.result(options, 'db')[options.fetch](options.options[options.fetch], callback);
       } else {
-        options.db[methodMap[method]](model.toJSON(), options.options[methodMap[method]], callback);
+        _.result(options, 'db')[methodMap[method]](model.toJSON(), options.options[methodMap[method]], callback);
       }
 
       return options;
@@ -178,19 +178,19 @@
 
     function getPouch(model) {
       if (model.pouch && model.pouch.db) {
-        return model.pouch.db;
+        return _.result(model.pouch, 'db');
       }
       if (model.collection && model.collection.pouch && model.collection.pouch.db) {
-        return model.collection.pouch.db;
+        return _.result(model.collection.pouch, 'db');
       }
 
       if (defaults.db) {
-        return defaults.db;
+        return _.result(defaults, 'db');
       }
 
       var options = model.sync();
       if (options.db) {
-        return options.db;
+        return _.result(options, 'db');
       }
 
       // TODO: ask sync adapter
