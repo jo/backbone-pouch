@@ -76,7 +76,7 @@ You can also pass the PouchDB adapter to `BackbonePouch.attachments`:
 
 ```javascript
 _.extend(Backbone.Model.prototype, BackbonePouch.attachments({
-  db: PouchDB('mydb')
+  db: new PouchDB('mydb')
 }));
 ```
 
@@ -95,7 +95,7 @@ Backbone.Model.prototype.idAttribute = '_id';
 var MyModel = Backbone.Model.extend({
   idAttribute: '_id',
   sync: BackbonePouch.sync({
-    db: PouchDB('mydb')
+    db: new PouchDB('mydb')
   })
 });
 ```
@@ -109,19 +109,19 @@ Limit results to `10`.
 var Post = Backbone.Model.extend({
   idAttribute: '_id',
   sync: BackbonePouch.sync({
-    db: PouchDB('mydb')
+    db: new PouchDB('mydb')
   })
 });
 var Posts = Backbone.Collection.extend({
   model: Post,
   sync: BackbonePouch.sync({
-    db: PouchDB('mydb'),
+    db: new PouchDB('mydb'),
     fetch: 'query',
     options: {
       query: {
         include_docs: true,
         fun: {
-          map: function(doc) {
+          map: function(doc, emit) {
             if (doc.type === 'post') {
               emit(doc.position, null)
             }
@@ -151,7 +151,7 @@ Authors are returnd by `name`, Posts by `date`.
 
 ```javascript
 Backbone.sync =  BackbonePouch.sync({
-  db: PouchDB('mydb'),
+  db: new PouchDB('mydb'),
   fetch: 'query',
   options: {
     query: {
@@ -175,7 +175,7 @@ var Authors = Backbone.Collection.extend({
       query: {
         include_docs: true,
         fun: {
-          map: function(doc) {
+          map: function(doc, emit) {
             if (doc.type === 'author') {
               emit(doc.name, null)
             }
@@ -202,7 +202,7 @@ var Posts = Backbone.Collection.extend({
       query: {
         include_docs: true,
         fun: {
-          map: function(doc) {
+          map: function(doc, emit) {
             if (doc.type === 'post') {
               emit(doc.date, null)
             }
@@ -226,7 +226,7 @@ var Posts = Backbone.Collection.extend({
 ### Attachments
 ```javascript
 Backbone.sync =  BackbonePouch.sync({
-  db: PouchDB('mydb')
+  db: new PouchDB('mydb')
 });
 Backbone.Model.prototype.idAttribute = '_id';
 var MyModel = Backbone.Model.extend(BackbonePouch.attachments());
