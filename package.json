@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "backbone": "^1.1.2",
-    "pouchdb": "^2.2.3",
+    "pouchdb": "^3.1.0",
     "underscore": "^1.6.0"
   },
   "devDependencies": {
