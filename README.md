@@ -34,7 +34,7 @@ Backbone.sync = BackbonePouch.sync();
 [underscore]: http://underscorejs.org/underscore-min.js
 [backbone]: http://backbonejs.org/backbone-min.js
 [pouchdb]: http://download.pouchdb.com/pouchdb-nightly.min.js
-[backbone-pouch]: https://github.com/jo/backbone-pouch/blob/master/backbone-pouch.js
+[backbone-pouch]: https://raw.githubusercontent.com/jo/backbone-pouch/master/backbone-pouch.js
 
 ## Setup backbone-pouch
 You can configure Backbone to persist via backbone-pouch per model:
