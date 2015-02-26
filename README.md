@@ -16,7 +16,7 @@ Backbone.sync = BackbonePouch.sync();
 
 ### In the Browser
 1. Download [jQuery][jquery], [Underscore][underscore], [Backbone][backbone] and [PouchDB][pouchdb]
-2. Download the [production version][min] or the [development version][max].
+2. Download [backbone-pouch][backbone-pouch].
 3. In your web page:
 
 ```html
@@ -34,9 +34,7 @@ Backbone.sync = BackbonePouch.sync();
 [underscore]: http://underscorejs.org/underscore-min.js
 [backbone]: http://backbonejs.org/backbone-min.js
 [pouchdb]: http://download.pouchdb.com/pouchdb-nightly.min.js
-[min]: https://raw.github.com/jo/backbone-pouch/master/dist/backbone-pouch.min.js
-[max]: https://raw.github.com/jo/backbone-pouch/master/dist/backbone-pouch.js
-
+[backbone-pouch]: https://github.com/jo/backbone-pouch/blob/master/backbone-pouch.js
 
 ## Setup backbone-pouch
 You can configure Backbone to persist via backbone-pouch per model:
