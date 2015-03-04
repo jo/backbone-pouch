@@ -437,7 +437,7 @@ There were some breaking changes, so had to move up the major version.
 
 
 ## Release History
-* `1.5.0`: Remove Grunt in favour of purenpm purism and switch to tap
+* `1.5.0`: Remove Grunt in favour of purism and switch to tap
 * `1.4.0`: Update Backbone and Underscore
 * `1.3.0`: Do not parse view results, leave that up to the user
 * `1.2.1`: Improve option inheritance
