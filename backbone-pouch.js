@@ -103,7 +103,7 @@
           response = {};
         }
         if (method === 'read') {
-          if (options.listen) {
+          if (options.listen && (model instanceof Backbone.Collection)) {
             // TODO:
             // * implement for model
             // * allow overwriding of since.
